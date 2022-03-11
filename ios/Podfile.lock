@@ -1,4 +1,9 @@
 PODS:
+  - AppAuth (1.4.0):
+    - AppAuth/Core (= 1.4.0)
+    - AppAuth/ExternalUserAgent (= 1.4.0)
+  - AppAuth/Core (1.4.0)
+  - AppAuth/ExternalUserAgent (1.4.0)
   - boost (1.76.0)
   - BVLinearGradient (2.5.6):
     - React
@@ -277,6 +282,9 @@ PODS:
   - React-jsinspector (0.66.1)
   - React-logger (0.66.1):
     - glog
+  - react-native-app-auth (6.4.3):
+    - AppAuth (= 1.4.0)
+    - React-Core
   - react-native-flipper (0.117.0):
     - React-Core
   - react-native-mmkv (1.5.3):
@@ -432,6 +440,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
+  - react-native-app-auth (from `../node_modules/react-native-app-auth`)
   - react-native-flipper (from `../node_modules/react-native-flipper`)
   - react-native-mmkv (from `../node_modules/react-native-mmkv`)
   - react-native-notifications (from `../node_modules/react-native-notifications`)
@@ -456,6 +465,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - AppAuth
     - CocoaAsyncSocket
     - Flipper
     - Flipper-Boost-iOSX
@@ -510,6 +520,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
+  react-native-app-auth:
+    :path: "../node_modules/react-native-app-auth"
   react-native-flipper:
     :path: "../node_modules/react-native-flipper"
   react-native-mmkv:
@@ -554,6 +566,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  AppAuth: 31bcec809a638d7bd2f86ea8a52bd45f6e81e7c7
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   BVLinearGradient: e3aad03778a456d77928f594a649e96995f1c872
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -587,6 +600,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: db2f6e22a534d466fc0e34e622df47d9d20bab2f
   React-jsinspector: 8c0517dee5e8c70cd6c3066f20213ff7ce54f176
   React-logger: bfddd3418dc1d45b77b822958f3e31422e2c179b
+  react-native-app-auth: fd1eaa667c0bc014199456d14a6440cb74de814e
   react-native-flipper: cd9eabd8917104c1bbdca2621717cdca3b2addef
   react-native-mmkv: 576edf2fb8e6a08f368357d8e02b2971abe08e0d
   react-native-notifications: 805108822ceff3440644d5701944f0cda35f5b4b
@@ -612,4 +626,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 971393150233ff73b146b95d27a5ca85ea9a687a
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.11.2

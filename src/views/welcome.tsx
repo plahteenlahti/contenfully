@@ -1,7 +1,8 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { FC, useRef } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from 'react-native';
+import { AuthConfiguration, authorize } from 'react-native-app-auth';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import styled from 'styled-components/native';
@@ -78,6 +79,12 @@ export const Welcome: FC<Props> = ({ navigation }) => {
   //   };
   // });
 
+  const authenticate = async () => {
+    const result = await authorize(config);
+
+    console.log(result);
+  };
+
   return (
     <SafeAreaView>
       <ScrollView>
@@ -147,6 +154,10 @@ export const Welcome: FC<Props> = ({ navigation }) => {
 
           <Button disabled={!isValid} onPress={handleSubmit(submit)}>
             <ButtonText>Authorize</ButtonText>
+          </Button>
+
+          <Button onPress={authenticate}>
+            <ButtonText>Authenticate Contentful</ButtonText>
           </Button>
         </Container>
       </ScrollView>
