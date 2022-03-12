@@ -1,23 +1,52 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { renderHook } from '@testing-library/react-hooks';
-import {
-  setEnvironment,
-  setSpace,
-  spaceReducer,
-} from '../../storage/reducers/space';
-import { setSelectedToken, tokensReducer } from '../../storage/reducers/token';
+import { rest } from 'msw';
+import { server } from '../../setupTests';
 import { createWrapper } from '../../testing/query-wrapper';
 import { useEntry } from '../entry';
 
-test('useEntry works', async () => {
-  // tokens: { selected },
-  // space: { space, environment },
+describe('useEntry hook', () => {
+  test('returns data in correct format', async () => {
+    const { result, waitFor } = renderHook(() => useEntry('entry1234'), {
+      wrapper: createWrapper(),
+    });
 
-  const { result, waitFor } = renderHook(() => useEntry('entry1234'), {
-    wrapper: createWrapper(),
+    await waitFor(() => result.current.isSuccess);
+
+    expect(result.current.data).toEqual({
+      sys: {
+        space: {
+          sys: {
+            id: 'sys-id',
+          },
+        },
+        id: 'id',
+      },
+      fields: {
+        field: {
+          'en-US': 'Test lesson',
+          'fi-FI': 'Test lesson.  ',
+        },
+        anotherField: {
+          'en-US': 'test-lesson',
+          'fi-FI': 'test-lesson',
+        },
+      },
+    });
   });
 
-  waitFor(() => result.current.isSuccess);
+  test('returns error on error', async () => {
+    server.use(
+      rest.get('*', (req, res, ctx) => {
+        return res(ctx.status(500));
+      }),
+    );
 
-  expect(result.current.data).toEqual({ answer: 42 });
+    const { result, waitFor } = renderHook(() => useEntry('entry1234'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => result.current.isError);
+
+    expect(result.current.error).toBeDefined();
+  });
 });

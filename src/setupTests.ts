@@ -1,20 +1,33 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
 import { setupServer } from 'msw/node';
 import { setLogger } from 'react-query';
 import { rest } from 'msw';
+import 'cross-fetch/polyfill';
 
 export const handlers = [
   rest.get(
-    '/spaces/test/environments/test/entries/entry1234',
+    '*/spaces/test/environments/test/entries/entry1234',
     (req, res, ctx) => {
       return res(
         ctx.status(200),
         ctx.json({
-          name: 'mocked-react-query',
+          sys: {
+            space: {
+              sys: {
+                id: 'sys-id',
+              },
+            },
+            id: 'id',
+          },
+          fields: {
+            field: {
+              'en-US': 'Test lesson',
+              'fi-FI': 'Test lesson.  ',
+            },
+            anotherField: {
+              'en-US': 'test-lesson',
+              'fi-FI': 'test-lesson',
+            },
+          },
         }),
       );
     },
@@ -24,12 +37,12 @@ export const handlers = [
 export const server = setupServer(...handlers);
 
 // Establish API mocking before all tests.
-beforeAll(() => server.listen());
+global.beforeAll(() => server.listen());
 // Reset any request handlers that we may add during the tests,
 // so they don't affect other tests.
-afterEach(() => server.resetHandlers());
+global.afterEach(() => server.resetHandlers());
 // Clean up after the tests are finished.
-afterAll(() => server.close());
+global.afterAll(() => server.close());
 
 // silence react-query errors
 setLogger({
