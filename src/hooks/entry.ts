@@ -126,6 +126,8 @@ export const useEntry = (entryID?: string) => {
     space: { space, environment },
   } = useAppSelector(state => state);
 
+  console.log(selected, space, environment);
+
   return useQuery<Entry, Error>(
     ['entry', space, environment, selected],
     async () => {
