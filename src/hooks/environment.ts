@@ -1,7 +1,6 @@
 import { useQuery } from 'react-query';
+import { BASE_URL } from '../constants/constants';
 import { useAppSelector } from '../storage/store';
-
-const BASE_URL = 'https://api.contentful.com';
 
 type Organization = {};
 
@@ -36,15 +35,18 @@ type Response = {
   }[];
 };
 
-export const useEnvironment = (spaceID?: string) => {
-  const { selected } = useAppSelector(state => state.tokens);
+export const useEnvironments = () => {
+  const {
+    tokens: { selected },
+    space: { space },
+  } = useAppSelector(state => state);
 
-  return useQuery<Response, Error>(
-    ['environment', spaceID],
+  return useQuery<Response, Error, Response['items']>(
+    ['environment', space],
     async () => {
       try {
         const response = await fetch(
-          `${BASE_URL}/spaces/${spaceID}/environments`,
+          `${BASE_URL}/spaces/${space}/environments`,
           {
             headers: {
               Authorization: `Bearer ${selected?.content}`,
@@ -57,6 +59,9 @@ export const useEnvironment = (spaceID?: string) => {
         return error;
       }
     },
-    { enabled: !!spaceID },
+    {
+      enabled: !!space,
+      select: data => data.items,
+    },
   );
 };

@@ -32,6 +32,30 @@ export const handlers = [
       );
     },
   ),
+  rest.get('*/spaces/test/environments', (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        sys: {
+          space: {
+            sys: {
+              id: 'sys-id',
+            },
+          },
+          id: 'id',
+        },
+        limit: 0,
+        items: [
+          {
+            name: 'environment-1',
+          },
+          {
+            name: 'environment-2',
+          },
+        ],
+      }),
+    );
+  }),
 ];
 
 export const server = setupServer(...handlers);

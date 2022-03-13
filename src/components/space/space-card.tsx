@@ -2,7 +2,7 @@ import { DrawerNavigationHelpers } from '@react-navigation/drawer/lib/typescript
 import React, { FC } from 'react';
 import { Text } from 'react-native';
 import styled from 'styled-components/native';
-import { useEnvironment } from '../../hooks/environment';
+import { useEnvironments } from '../../hooks/environment';
 import { setEnvironment, setSpace } from '../../storage/reducers/space';
 import { useAppDispatch } from '../../storage/store';
 
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export const SpaceCard: FC<Props> = ({ name, id, navigation }) => {
-  const { data } = useEnvironment(id);
+  const { data: environments } = useEnvironments();
   const dispatch = useAppDispatch();
 
   const navigateToSpace = (environmentID: string) => {
@@ -26,7 +26,7 @@ export const SpaceCard: FC<Props> = ({ name, id, navigation }) => {
   return (
     <Container>
       <SpaceName>{name}</SpaceName>
-      {data?.items?.map(env => (
+      {environments?.map(env => (
         <Environment
           key={env.sys.id}
           onPress={() => navigateToSpace(env.sys.id)}>
