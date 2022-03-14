@@ -1,8 +1,8 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
-import { StatusBar } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { NativeEventEmitter, Platform, StatusBar } from 'react-native';
 import {
   Notification,
   Notifications,
@@ -36,6 +36,7 @@ import { Space } from '../views/space';
 import { User } from '../views/user';
 import { Webhook } from '../views/webhook';
 import { Welcome } from '../views/welcome';
+import Shortcuts, { ShortcutItem } from 'react-native-actions-shortcuts';
 
 type SpaceTabParamList = {
   Home: undefined;
@@ -93,6 +94,8 @@ export const MainNavigation = () => {
   const { theme, dark, light } = useThemeScheme();
   const dispatch = useAppDispatch();
 
+  const ShortcutsEmitter = new NativeEventEmitter(Shortcuts);
+
   useEffect(() => {
     Notifications.events().registerRemoteNotificationsRegistered(
       (event: Registered) => {
@@ -123,7 +126,53 @@ export const MainNavigation = () => {
     );
   }, [dispatch]);
 
-  console.log(theme);
+  const handleShortcut = (item: ShortcutItem) => {
+    console.log(item);
+  };
+
+  const setShortcuts = useCallback(async () => {
+    await Shortcuts.setShortcuts([
+      {
+        type: 'models',
+        title: 'Models',
+        shortTitle: 'Models',
+        subtitle: 'Open models',
+        iconName: 'models',
+        data: {
+          id: '1234',
+        },
+      },
+      {
+        type: 'entries',
+        title: 'Entries',
+        shortTitle: 'Entries',
+        subtitle: 'Open entries',
+        iconName: 'content',
+        data: {
+          id: '1234',
+        },
+      },
+      {
+        type: 'assets',
+        title: 'Assets',
+        shortTitle: 'Assets',
+        subtitle: 'Open assets',
+        iconName: 'assets',
+        data: {
+          id: '1234',
+        },
+      },
+    ]);
+  }, []);
+
+  useEffect(() => {
+    ShortcutsEmitter.addListener('onShortcutItemPressed', handleShortcut);
+
+    setShortcuts();
+    return () =>
+      ShortcutsEmitter.removeListener('onShortcutItemPressed', handleShortcut);
+  }, [ShortcutsEmitter, setShortcuts]);
+
   return (
     <ThemeProvider
       theme={{

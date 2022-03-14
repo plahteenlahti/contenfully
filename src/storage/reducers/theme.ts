@@ -10,42 +10,29 @@ export type Color =
   | 'orange'
   | 'fuchsia';
 
+export type CustomTheme = {
+  text: Color;
+  textColorScale: 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+  background: Color;
+  backgroundColorScale:
+    | 50
+    | 100
+    | 200
+    | 300
+    | 400
+    | 500
+    | 600
+    | 700
+    | 800
+    | 900;
+};
+
 export type ThemeState = {
   useSystemTheme: boolean;
   accentColor: Color;
   theme: 'light' | 'dark';
-  dark: {
-    text: Color;
-    textColorScale: 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
-    background: Color;
-    backgroundColorScale:
-      | 50
-      | 100
-      | 200
-      | 300
-      | 400
-      | 500
-      | 600
-      | 700
-      | 800
-      | 900;
-  };
-  light: {
-    text: Color;
-    textColorScale: 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
-    background: Color;
-    backgroundColorScale:
-      | 50
-      | 100
-      | 200
-      | 300
-      | 400
-      | 500
-      | 600
-      | 700
-      | 800
-      | 900;
-  };
+  dark: CustomTheme;
+  light: CustomTheme;
 };
 
 const initialState: ThemeState = {
@@ -76,16 +63,10 @@ export const themeSlice = createSlice({
     setAccentColor: (state, action: PayloadAction<Color>) => {
       state.accentColor = action.payload;
     },
-    setDarkColorScheme: (
-      state,
-      action: PayloadAction<{ text: Color; background: Color }>,
-    ) => {
+    setDarkColorScheme: (state, action: PayloadAction<CustomTheme>) => {
       state.dark = action.payload;
     },
-    setLightColorScheme: (
-      state,
-      action: PayloadAction<{ text: Color; background: Color }>,
-    ) => {
+    setLightColorScheme: (state, action: PayloadAction<CustomTheme>) => {
       state.light = action.payload;
     },
   },

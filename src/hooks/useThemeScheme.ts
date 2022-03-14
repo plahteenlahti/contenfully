@@ -1,7 +1,14 @@
 import { useColorScheme } from 'react-native';
+import { CustomTheme } from '../storage/reducers/theme';
 import { useAppSelector } from '../storage/store';
 
-export const useThemeScheme = () => {
+type Theme = {
+  theme: 'dark' | 'light';
+  dark: CustomTheme;
+  light: CustomTheme;
+};
+
+export const useThemeScheme = (): Theme => {
   const { useSystemTheme, theme, dark, light } = useAppSelector(
     state => state.theme,
   );

@@ -1,5 +1,6 @@
 #import "RNNotifications.h"
 #import "AppDelegate.h"
+#import "RNShortcuts.h"
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
@@ -71,4 +72,8 @@ static void InitializeFlipper(UIApplication *application) {
   [RNNotifications didFailToRegisterForRemoteNotificationsWithError:error];
 }
 
+// React Native Quick Actions
+- (void)application:(UIApplication *)application performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL))completionHandler {
+    [RNShortcuts performActionForShortcutItem:shortcutItem completionHandler:completionHandler];
+}
 @end
