@@ -47,9 +47,9 @@ const initialState: ThemeState = {
   },
   light: {
     text: 'stone',
-    textColorScale: 100,
+    textColorScale: 900,
     background: 'stone',
-    backgroundColorScale: 800,
+    backgroundColorScale: 100,
   },
 };
 

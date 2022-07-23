@@ -165,13 +165,13 @@ export const MainNavigation = () => {
     ]);
   }, []);
 
-  useEffect(() => {
-    ShortcutsEmitter.addListener('onShortcutItemPressed', handleShortcut);
+  // useEffect(() => {
+  //   ShortcutsEmitter.addListener('onShortcutItemPressed', handleShortcut);
 
-    setShortcuts();
-    return () =>
-      ShortcutsEmitter.removeListener('onShortcutItemPressed', handleShortcut);
-  }, [ShortcutsEmitter, setShortcuts]);
+  //   setShortcuts();
+  //   return () =>
+  //     ShortcutsEmitter.removeListener('onShortcutItemPressed', handleShortcut);
+  // }, [ShortcutsEmitter, setShortcuts]);
 
   return (
     <ThemeProvider

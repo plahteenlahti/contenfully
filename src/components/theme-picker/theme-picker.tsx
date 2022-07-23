@@ -12,7 +12,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { CardTitle } from '../shared/typography';
+import { CardDescription, CardTitle } from '../shared/typography';
 
 const colors: Color[] = ['stone', 'emerald', 'indigo', 'fuchsia', 'red'];
 
@@ -65,6 +65,8 @@ export const ThemePicker: FC = () => {
       </ColorOptions>
 
       <CardTitle>Theme</CardTitle>
+
+      <CardDescription>Use system preferences for theme color.</CardDescription>
       <Switch value={useSystemTheme} onChange={setThemePreference} />
 
       <CardTitle>Background color</CardTitle>
