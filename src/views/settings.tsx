@@ -10,6 +10,7 @@ import { CardDescription, CardTitle } from '../components/shared/typography';
 import { ThemePicker } from '../components/theme-picker/theme-picker';
 import { addToken } from '../storage/reducers/token';
 import { useAppDispatch, useAppSelector } from '../storage/store';
+import { resolveColor } from '../utilities/color';
 
 export const Settings: FC = () => {
   const { tokens, selected } = useAppSelector(state => state.tokens);
@@ -116,13 +117,15 @@ export const Settings: FC = () => {
 
 const InputLabel = styled.Text`
   font-size: 13px;
-  color: ${({ theme }) => theme.colors.gray[500]};
+  margin-bottom: 8px;
+  color: ${({ theme }) => resolveColor(theme, 'text')};
 `;
 
 const Input = styled.TextInput`
   margin: 4px 0px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.gray[400]};
+  color: ${({ theme }) => resolveColor(theme, 'text')};
   padding: 8px;
   border-radius: 8px;
   font-size: 13px;

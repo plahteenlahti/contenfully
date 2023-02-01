@@ -8,6 +8,17 @@ declare module 'styled-components' {
     dark: {
       text: Color;
       textColorScale: 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+      borderColorScale:
+        | 50
+        | 100
+        | 200
+        | 300
+        | 400
+        | 500
+        | 600
+        | 700
+        | 800
+        | 900;
       background: Color;
       backgroundColorScale:
         | 50
@@ -24,6 +35,17 @@ declare module 'styled-components' {
     light: {
       text: Color;
       textColorScale: 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+      borderColorScale:
+        | 50
+        | 100
+        | 200
+        | 300
+        | 400
+        | 500
+        | 600
+        | 700
+        | 800
+        | 900;
       background: Color;
       backgroundColorScale:
         | 50
