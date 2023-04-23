@@ -192,8 +192,6 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules
-    
-    implementation project(':react-native-notifications')
     implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
