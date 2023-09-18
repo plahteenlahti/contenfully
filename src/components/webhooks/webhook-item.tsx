@@ -1,9 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { FC } from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, Text, TouchableOpacity, View } from 'react-native';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
+  RectButton,
 } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -14,21 +15,18 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import styled from 'styled-components/native';
-import { Webhook } from '../../hooks/webhooks';
+import { z } from 'zod';
+import { WebhookSchema } from '../../schemas/webhook';
 import { formatTimestamp } from '../../utilities/time';
 import { SpaceScreenProps } from '../../views/space';
 import { Chevron } from '../icons/chevron';
 import { DeleteIcon } from '../icons/delete';
-import { Description, ItemContainer, Title } from '../item/item';
 
 const WIDTH = Dimensions.get('window').width - 16;
-const BUTTON_WIDTH = 80;
-const MAX_TRANSLATE = -BUTTON_WIDTH;
+const MAX_TRANSLATE = -80;
 
 const springConfig = (velocity: number) => {
   'worklet';
-
   return {
     stiffness: 1000,
     damping: 500,
@@ -46,13 +44,12 @@ const timingConfig = {
 };
 
 type Props = {
-  hook: Webhook;
+  hook: z.infer<typeof WebhookSchema>;
   removeHook: (id: string) => void;
 };
 
 export const WebhookItem: FC<Props> = ({ hook, removeHook }) => {
   const navigation = useNavigation<SpaceScreenProps['navigation']>();
-
   const isRemoving = useSharedValue(false);
   const translateX = useSharedValue(0);
 
@@ -118,56 +115,33 @@ export const WebhookItem: FC<Props> = ({ hook, removeHook }) => {
 
   return (
     <PanGestureHandler activeOffsetX={[-10, 10]} onGestureEvent={handler}>
-      <Animated.View style={styles}>
-        <ItemContainer
-          onPress={() =>
-            navigation.navigate('Webhook', {
-              webhookID: hook?.sys?.id,
-              title: `${hook?.name}`,
-            })
-          }>
-          <Column>
-            <Title>{`${hook?.name}`}</Title>
-            <Description>{formatTimestamp(hook?.sys.updatedAt)}</Description>
-          </Column>
-          <Chevron />
-        </ItemContainer>
-        <ButtonsContainer>
-          <ButtonContainer>
-            <DeleteButton onPress={handleDelete}>
+      <Animated.View>
+        <View className="absolute bottom-0 right-0 top-0 ">
+          <View className="w-12 flex-1 items-center justify-center bg-red-500 ">
+            <TouchableOpacity className="" onPress={handleDelete}>
               <DeleteIcon color={'white'} />
-            </DeleteButton>
-          </ButtonContainer>
-        </ButtonsContainer>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Animated.View style={styles}>
+          <RectButton
+            className="flex-row items-center bg-white px-2 py-2"
+            onPress={() =>
+              navigation.navigate('Webhook', {
+                webhookID: hook?.sys?.id,
+                title: `${hook?.name}`,
+              })
+            }>
+            <View className="flex-1">
+              <Text className="text-sm text-gray-700">{`${hook?.name}`}</Text>
+              <Text className="text-xs text-gray-500">
+                {formatTimestamp(hook?.sys.updatedAt)}
+              </Text>
+            </View>
+            <Chevron />
+          </RectButton>
+        </Animated.View>
       </Animated.View>
     </PanGestureHandler>
   );
 };
-
-const Column = styled.View`
-  flex: 1;
-  padding-bottom: 8px;
-`;
-
-const ButtonContainer = styled.View`
-  width: ${WIDTH}px;
-  padding-right: ${WIDTH - BUTTON_WIDTH}px;
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-  background-color: ${({ theme }) => theme.colors.red[500]};
-`;
-
-const DeleteButton = styled.TouchableOpacity`
-  width: ${BUTTON_WIDTH}px;
-  justify-content: center;
-  align-items: center;
-`;
-
-const ButtonsContainer = styled.View`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: ${WIDTH}px;
-  width: ${WIDTH}px;
-`;

@@ -1,35 +1,25 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { FC, useRef } from 'react';
+import { useAtom } from 'jotai';
+import React, { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { TextInput } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import styled from 'styled-components/native';
-import { Container } from '../components/shared/container';
 import { MainStackParamList } from '../navigation/navigation';
-import { addToken, setSelectedToken } from '../storage/reducers/token';
-import { useAppDispatch } from '../storage/store';
+import { Contentful } from '../services/contentful';
+import { tokenAtom } from '../storage/jotai/token';
 import { font } from '../styles';
 
 const icon = require('../assets/app-icon.png');
 
-type Context = {
-  translateX: number;
-  translateY: number;
-};
-
 type Props = NativeStackScreenProps<MainStackParamList, 'Welcome'>;
 
 export const Welcome: FC<Props> = ({ navigation }) => {
-  const dispatch = useAppDispatch();
-
-  const nameRef = useRef<TextInput>(null);
-  const contentReft = useRef<TextInput>(null);
+  const [token, setToken] = useAtom(tokenAtom);
 
   const {
     control,
     handleSubmit,
-    reset,
     formState: { isValid },
   } = useForm({
     mode: 'onChange',
@@ -39,116 +29,60 @@ export const Welcome: FC<Props> = ({ navigation }) => {
     },
   });
 
-  const submit = ({ name, content }: { name: string; content: string }) => {
-    if (name && content) {
-      dispatch(addToken({ name: name, content: content }));
-      dispatch(setSelectedToken({ name: name, content: content }));
-      reset();
-      navigation.navigate('Drawer');
+  const submit = async ({ content }: { content: string }) => {
+    try {
+      const tokenContent = await Contentful.validateToken(content);
+      if (tokenContent.valid) {
+        setToken({ email: tokenContent.email, content: content });
+        navigation.navigate('Drawer');
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  // const gestureHandler = useAnimatedGestureHandler<
-  //   PanGestureHandlerGestureEvent,
-  //   Context
-  // >({
-  //   onStart: (_, ctx) => {
-  //     ctx.translateX = translateX.value;
-  //     ctx.translateY = translateY.value;
-  //   },
-  //   onActive: (event, ctx) => {
-  //     translateX.value = ctx.translateX + event.translationX;
-  //     translateY.value = ctx.translateY + event.translationY;
-  //   },
-  //   onEnd: _ => {
-  //     translateX.value = withSpring(0);
-  //     translateY.value = withSpring(0);
-  //   },
-  // });
-
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   'worklet';
-  //   return {
-  //     transform: [
-  //       {
-  //         translateX: translateX.value,
-  //       },
-  //       { translateY: translateY.value },
-  //     ],
-  //   };
-  // });
-
   return (
     <SafeAreaView>
+      <Background>
+        <LargeCircle />
+        <SmallCircle />
+      </Background>
       <ScrollView>
-        <Container>
-          <Column>
-            <PanGestureHandler>
-              <IconContainer>
-                <Icon source={icon} />
-              </IconContainer>
-            </PanGestureHandler>
-          </Column>
-          <Title>Contentfully</Title>
-          <Subtitle>Manage Contentful Spaces</Subtitle>
+        <Column>
+          <PanGestureHandler>
+            <IconContainer>
+              <Icon source={icon} />
+            </IconContainer>
+          </PanGestureHandler>
+        </Column>
+        <Title>Contentfully</Title>
+        <Subtitle>Manage your Contentful Space {token?.name}</Subtitle>
 
-          <InputLabel>Token name</InputLabel>
-          <Controller
-            name="name"
-            control={control}
-            rules={{
-              required: true,
-              maxLength: 500,
-            }}
-            render={({
-              field: { onChange, onBlur },
-              fieldState: { invalid },
-            }) => (
-              <Input
-                ref={nameRef}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                hasErrors={invalid}
-                spellCheck={true}
-                returnKeyType="next"
-                placeholder="ACME Corp Token"
-                onSubmitEditing={() => contentReft.current?.focus()}
-              />
-            )}
-          />
+        <InputLabel>Token</InputLabel>
+        <Controller
+          name="content"
+          control={control}
+          rules={{
+            required: true,
+          }}
+          render={({
+            field: { onChange, onBlur },
+            fieldState: { isTouched, invalid },
+          }) => (
+            <Input
+              onChangeText={onChange}
+              onBlur={onBlur}
+              hasErrors={isTouched && invalid}
+              textContentType="password"
+              returnKeyType="done"
+              placeholder="1234Token55678"
+            />
+          )}
+        />
 
-          <InputLabel>Token</InputLabel>
-          <Controller
-            name="content"
-            control={control}
-            rules={{
-              required: true,
-            }}
-            render={({
-              field: { onChange, onBlur },
-              fieldState: { isTouched, invalid },
-            }) => (
-              <Input
-                ref={contentReft}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                hasErrors={isTouched && invalid}
-                textContentType="password"
-                returnKeyType="done"
-                placeholder="1234Token55678"
-              />
-            )}
-          />
-
-          <HelpText>
-            To create a Contentful Management token in Contentful dashboard,
-            follow these instructions.
-          </HelpText>
-
-          <Button disabled={!isValid} onPress={handleSubmit(submit)}>
-            <ButtonText>Authorize</ButtonText>
-          </Button>
-        </Container>
+        <Button disabled={!isValid} onPress={handleSubmit(submit)}>
+          <ButtonText>Authorize</ButtonText>
+        </Button>
       </ScrollView>
     </SafeAreaView>
   );
@@ -158,11 +92,40 @@ const ScrollView = styled.ScrollView`
   padding: 16px;
 `;
 
+const Background = styled.View`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+`;
+
+const LargeCircle = styled.View`
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 300px;
+  border-color: ${({ theme }) => theme.colors.gray[200]};
+  border-width: 10px;
+  right: -300px;
+  top: -200px;
+`;
+
+const SmallCircle = styled.View`
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 150px;
+  background-color: ${({ theme }) => theme.colors.gray[50]};
+  border-color: ${({ theme }) => theme.colors.gray[200]};
+  border-width: 10px;
+  right: 240px;
+  top: 50px;
+`;
+
 const Title = styled.Text`
   font-size: 32px;
   text-align: center;
   margin-bottom: 8px;
-  color: ${({ theme }) => theme.colors.gray[600]};
+  color: ${({ theme }) => theme.colors.gray[700]};
   font-family: ${font.bold};
 `;
 
@@ -213,6 +176,8 @@ const Input = styled.TextInput<TextInputProps>`
   font-family: ${font.regular};
   border-radius: 8px;
   font-size: 13px;
+  color: ${({ theme }) =>
+    theme.theme === 'light' ? theme.colors.gray[900] : theme.colors.gray[600]};
 `;
 
 const HelpText = styled.Text`

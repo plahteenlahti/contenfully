@@ -1,51 +1,48 @@
 import { DrawerNavigationHelpers } from '@react-navigation/drawer/lib/typescript/src/types';
 import React, { FC } from 'react';
-import { Text } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import styled from 'styled-components/native';
 import { useEnvironment } from '../../hooks/environment';
 import { setEnvironment, setSpace } from '../../storage/reducers/space';
 import { useAppDispatch } from '../../storage/store';
+import { z } from 'zod';
+import { SpaceSchema } from '../../schemas/space';
 
 type Props = {
-  name: string;
+  space: z.infer<typeof SpaceSchema>;
   id: string;
   navigation: DrawerNavigationHelpers;
 };
 
-export const SpaceCard: FC<Props> = ({ name, id, navigation }) => {
-  const { data } = useEnvironment(id);
+export const SpaceCard: FC<Props> = ({ space, id, navigation }) => {
+  const environment = useEnvironment(id);
   const dispatch = useAppDispatch();
 
   const navigateToSpace = (environmentID: string) => {
     dispatch(setSpace(id));
     dispatch(setEnvironment(environmentID));
-
     navigation.navigate('Space', { id });
   };
 
   return (
-    <Container>
-      <SpaceName>{name}</SpaceName>
-      {data?.items?.map(env => (
-        <Environment
-          key={env.sys.id}
-          onPress={() => navigateToSpace(env.sys.id)}>
-          <Text>{env.name}</Text>
-        </Environment>
-      ))}
-    </Container>
+    <View className="mx-2 my-2 rounded-md bg-gray-100 px-2 py-2">
+      <Text className="mb-1 text-base font-medium text-gray-800">
+        {space.name}
+      </Text>
+      <Text className="text-sm text-gray-600">{space.sys.id}</Text>
+      {environment.data?.items?.map(env => {
+        return (
+          <TouchableOpacity
+            className="flex-1 py-2"
+            key={env.sys.id}
+            onPress={() => navigateToSpace(env.sys.id)}>
+            <Text className="text-right text-sm text-gray-600">{env.name}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 };
-
-const Container = styled.View`
-  padding: 16px;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: ${({ theme }) => theme.colors.gray[50]};
-  margin: 8px;
-  border-radius: 4px;
-  border-color: ${({ theme }) => theme.colors.gray[200]};
-  border-width: 1px;
-`;
 
 const SpaceName = styled.Text`
   font-size: 16px;

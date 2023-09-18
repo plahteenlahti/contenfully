@@ -1,126 +1,108 @@
-import formatRelative from 'date-fns/formatRelative';
-import React, { FC, useLayoutEffect, useState } from 'react';
-import styled from 'styled-components/native';
-import { useModels } from '../hooks/models';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ModelStackParamList } from '../navigation/navigation';
+import React, { useCallback } from 'react';
+import {
+  FlatList,
+  ListRenderItem,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { z } from 'zod';
+import { Card } from '../components/card/Card';
 import { RefreshControl } from '../components/shared/refresh-control';
+import { useModels } from '../hooks/models';
+import { ModelStackParamList } from '../navigation/navigation';
+import { ModelSchema } from '../schemas/contentful';
+import { localizedFormatDate } from '../utilities/time';
+import { styled } from 'nativewind';
 
-type Props = NativeStackScreenProps<ModelStackParamList, 'Model'>;
+type Model = z.infer<typeof ModelSchema>;
 
-export const Models: FC<Props> = ({ navigation }) => {
-  const { data, isRefetching, refetch } = useModels();
-  const [, setSearch] = useState<undefined | string>(undefined);
+const StyledFlatList = styled(FlatList, {
+  props: {
+    contentContainerStyle: true,
+  },
+});
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerSearchBarOptions: {
-        onSearchButtonPress: event => setSearch(event.nativeEvent.text),
-        onCancelButtonPress: () => setSearch(undefined),
-      },
-    });
-  }, [navigation]);
+export const Models = ({
+  navigation,
+}: NativeStackScreenProps<ModelStackParamList, 'Models'>) => {
+  const models = useModels();
+  // const [, setSearch] = useState<undefined | string>(undefined);
+
+  // useLayoutEffect(() => {
+  //   navigation.setOptions({
+  //     headerSearchBarOptions: {
+  //       onSearchButtonPress: event => setSearch(event.nativeEvent.text),
+  //       onCancelButtonPress: () => setSearch(undefined),
+  //     },
+  //   });
+  // }, [navigation]);
+
+  const renderItem: ListRenderItem<Model> = useCallback(
+    ({ item }) => {
+      return (
+        <TouchableOpacity
+          className=" py-2"
+          key={item.sys.id}
+          onPress={() =>
+            navigation.navigate('Model', { modelID: item.sys.id })
+          }>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-medium text-gray-500">
+              {item.name}
+            </Text>
+            <Text className="text-xs font-medium text-gray-500">
+              {localizedFormatDate(new Date(item.sys.createdAt))}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <Text className="flex-1 pr-4 text-xs font-medium text-gray-500">
+              {item.description || '-'}
+            </Text>
+            <Text className="text-xs font-medium text-gray-500">
+              {localizedFormatDate(new Date(item.sys.updatedAt))}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [navigation],
+  );
+
+  const divider = useCallback(() => <Card.Divider />, []);
 
   return (
-    <ScrollView
+    <StyledFlatList
+      ItemSeparatorComponent={divider}
+      className="px-2 py-2"
+      contentContainerStyle="bg-white rounded-md px-2 py-2"
+      ListHeaderComponent={
+        <View className="mb-8">
+          <View className="item-center mb-2 flex-row justify-between border-b border-b-gray-200 pb-2">
+            <View>
+              <Text className="text-sm font-semibold text-gray-800">Name</Text>
+              <Text className="text-xs text-gray-600">Description</Text>
+            </View>
+            <View>
+              <Text className="text-sm font-semibold text-gray-800">
+                Created
+              </Text>
+              <Text className="text-xs text-gray-600">Updated</Text>
+            </View>
+          </View>
+          <View className="gap-2" />
+        </View>
+      }
+      data={models.data?.items}
+      renderItem={renderItem}
       refreshControl={
-        <RefreshControl onRefresh={refetch} refreshing={isRefetching} />
-      }>
-      <Container>
-        <TableHeader>
-          <TableHeaderCell>
-            <TableHeaderCellText>Name</TableHeaderCellText>
-            <TableHeaderCellTextSmall>Description</TableHeaderCellTextSmall>
-          </TableHeaderCell>
-          <TableHeaderCell>
-            <TableHeaderCellText>Created</TableHeaderCellText>
-            <TableHeaderCellTextSmall>Updated</TableHeaderCellTextSmall>
-          </TableHeaderCell>
-        </TableHeader>
-        {data?.items?.map(model => (
-          <Model
-            key={model.sys.id}
-            onPress={() =>
-              navigation.navigate('Model', { modelID: model.sys.id })
-            }>
-            <Row>
-              <Name>{model.name}</Name>
-              <Name>
-                {formatRelative(new Date(model.sys.createdAt), new Date())}
-              </Name>
-            </Row>
-
-            <Row>
-              <Description>{model.description || '-'}</Description>
-              <Description>
-                {formatRelative(new Date(model.sys.updatedAt), new Date())}
-              </Description>
-            </Row>
-          </Model>
-        ))}
-      </Container>
-    </ScrollView>
+        <RefreshControl
+          onRefresh={models.refetch}
+          refreshing={models.isRefetching}
+        />
+      }
+    />
   );
 };
-
-const ScrollView = styled.ScrollView``;
-
-const Container = styled.View`
-  background-color: white;
-  margin: 8px;
-  border-radius: 4px;
-  border-color: ${({ theme }) => theme.colors.gray[200]};
-  border-width: 1px;
-`;
-
-const Name = styled.Text`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.gray[800]};
-`;
-
-const Description = styled(Name)`
-  margin-top: 4px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.gray[600]};
-  max-width: 50%;
-`;
-
-const Model = styled.TouchableOpacity`
-  padding: 8px;
-  border-bottom-width: 1px;
-  border-bottom-color: ${({ theme }) => theme.colors.gray[200]};
-`;
-
-const TableHeader = styled.View`
-  flex-direction: row;
-  border-top-right-radius: 4px;
-  border-top-left-radius: 4px;
-  background-color: ${({ theme }) => theme.colors.gray[100]};
-  padding: 8px;
-  flex-direction: row;
-  justify-content: space-between;
-  border-bottom-width: 1px;
-  border-bottom-color: ${({ theme }) => theme.colors.gray[200]};
-`;
-
-const TableHeaderCell = styled.View``;
-
-const TableHeaderCellText = styled.Text`
-  text-transform: uppercase;
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.gray[600]};
-  letter-spacing: 0.3px;
-`;
-
-const TableHeaderCellTextSmall = styled.Text`
-  margin-top: 4px;
-  text-transform: uppercase;
-  font-size: 10px;
-  color: ${({ theme }) => theme.colors.gray[500]};
-  letter-spacing: 0.3px;
-`;
-
-const Row = styled.View`
-  justify-content: space-between;
-  flex-direction: row;
-`;

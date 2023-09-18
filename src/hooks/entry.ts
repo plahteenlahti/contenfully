@@ -1,61 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { BASE_URL } from '../constants/constants';
+import { Contentful } from '../services/contentful';
 import { useAppSelector } from '../storage/store';
-import { Link } from '../typings/contentful';
-import { LocaleCode } from '../typings/locale';
-
-type Field = string;
-type FieldName = string;
-
-export type Entry = {
-  metadata: {
-    tags: [];
-  };
-  fields: {
-    [key in FieldName]: {
-      [key in LocaleCode]: Field;
-    };
-  };
-  sys: {
-    space: {
-      sys: Entry;
-    };
-    id: string;
-    type: string;
-    createdAt: string;
-    updatedAt: string;
-    environment: {
-      sys: Entry;
-    };
-    publishedVersion: number;
-    publishedAt: string;
-    firstPublishedAt: string;
-    createdBy: {
-      sys: Entry;
-    };
-    updatedBy: {
-      sys: Entry;
-    };
-    publishedCounter: number;
-    version: number;
-    publishedBy: {
-      sys: Entry;
-    };
-    contentType: {
-      sys: Link;
-    };
-  };
-};
-
-type Response = {
-  sys: {
-    type: string;
-  };
-  total: number;
-  skip: number;
-  limit: number;
-  items: Entry[];
-};
 
 type QueryParams = {
   type: 'limit' | 'skip' | 'order' | 'query';
@@ -66,37 +12,24 @@ type QueryOptions = QueryParams[];
 
 export const useEntries = (queryOptions?: QueryOptions) => {
   const {
-    tokens: { selected },
     space: { space, environment },
   } = useAppSelector(state => state);
 
-  const url = new URL(
-    `${BASE_URL}/spaces/${space}/environments/${environment}/entries?limit=25&skip=0`,
-  );
+  // queryOptions?.forEach(({ type, parameter }) => {
+  //   if (type && parameter) {
+  //     url.searchParams.append(type, parameter);
+  //   }
+  // });
+  // url.searchParams.set('skip', `${pageParam}`);
 
-  queryOptions?.forEach(({ type, parameter }) => {
-    if (type && parameter) {
-      url.searchParams.append(type, parameter);
-    }
-  });
-
-  return useInfiniteQuery<Response, Error, Response>(
+  return useInfiniteQuery(
     ['entries', { space, environment, queryOptions }],
-    async ({ pageParam = 0 }) => {
-      url.searchParams.set('skip', `${pageParam}`);
-
-      const response = await fetch(url.href, {
-        headers: {
-          Authorization: `Bearer ${selected?.content}`,
-        },
-      });
-
-      return response.json();
-    },
+    async ({ pageParam = 0 }) =>
+      await Contentful.Entries.getAll(space, environment),
     {
-      enabled: !!space && !!environment && !!selected,
+      enabled: !!space && !!environment,
       select: data => {
-        const allPagesArray: Entry[][] = [];
+        const allPagesArray = [];
         data?.pages?.forEach(entryArray =>
           allPagesArray.push(entryArray.items),
         );
@@ -115,29 +48,13 @@ export const useEntries = (queryOptions?: QueryOptions) => {
 
 export const useEntry = (entryID?: string) => {
   const {
-    tokens: { selected },
     space: { space, environment },
   } = useAppSelector(state => state);
 
-  return useQuery<Entry, Error>(
-    ['entry', space, environment, selected],
-    async () => {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/spaces/${space}/environments/${environment}/entries/${entryID}`,
-          {
-            headers: {
-              Authorization: `Bearer ${selected?.content}`,
-            },
-          },
-        );
-
-        return response.json();
-      } catch (error) {
-        return error;
-      }
-    },
-    { enabled: !!space && !!environment && !!selected && !!entryID },
+  return useQuery(
+    ['entry', space, environment, entryID],
+    async () => await Contentful.Entries.getById(space, environment, entryID),
+    { enabled: !!space && !!environment && !!entryID },
   );
 };
 

@@ -1,25 +1,21 @@
-import React, { FC, useEffect, useState } from 'react';
-import styled from 'styled-components/native';
-import {
-  Color,
-  setAccentColor,
-  toggleUseSystemTheme,
-} from '../../storage/reducers/theme';
-import { useAppDispatch, useAppSelector } from '../../storage/store';
-import { ThemePreview } from './theme-preview';
+import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { CardTitle } from '../shared/typography';
+import styled from 'styled-components/native';
+import { Color, setAccentColor } from '../../storage/reducers/theme';
+import { useAppDispatch, useAppSelector } from '../../storage/store';
+import { ThemePreview } from './theme-preview';
 
 const colors: Color[] = ['stone', 'emerald', 'indigo', 'fuchsia', 'red'];
 
-export const ThemePicker: FC = () => {
+export const ThemePicker = () => {
   const [width, setWidth] = useState(0);
   const dispatch = useAppDispatch();
-  const { accentColor, useSystemTheme } = useAppSelector(({ theme }) => theme);
+  const { accentColor } = useAppSelector(({ theme }) => theme);
 
   const left = useSharedValue(
     colors.findIndex(color => color === accentColor) * (width / colors.length),
@@ -40,14 +36,10 @@ export const ThemePicker: FC = () => {
     dispatch(setAccentColor(color));
   };
 
-  const setThemePreference = () => {
-    dispatch(toggleUseSystemTheme(!useSystemTheme));
-  };
-
   return (
-    <Container>
+    <View>
       <ThemePreview />
-      <CardTitle>Accent color</CardTitle>
+      <Text>Accent color</Text>
       <ColorOptions
         onLayout={event => {
           const { width: containerWidth } = event.nativeEvent.layout;
@@ -63,21 +55,9 @@ export const ThemePicker: FC = () => {
           </ColorCircle>
         ))}
       </ColorOptions>
-
-      <CardTitle>Theme</CardTitle>
-      <Switch value={useSystemTheme} onChange={setThemePreference} />
-
-      <CardTitle>Background color</CardTitle>
-
-      <CardTitle>Text color</CardTitle>
-    </Container>
+    </View>
   );
 };
-
-const Container = styled.View`
-  margin-top: 16px;
-  min-height: 350px; ;
-`;
 
 const ColorOptions = styled.View`
   display: flex;

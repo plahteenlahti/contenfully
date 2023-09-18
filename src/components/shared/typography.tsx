@@ -3,7 +3,7 @@ import { font } from '../../styles';
 import { resolveColor } from '../../utilities/color';
 
 export const CardTitle = styled.Text`
-  color: ${({ theme }) => resolveColor(theme, 'text')};
+  color: ${({ theme }) => theme.accent};
   font-family: ${font.medium};
   text-transform: uppercase;
   font-weight: 500;

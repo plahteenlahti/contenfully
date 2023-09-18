@@ -4,7 +4,7 @@ import { FlatList } from 'react-native';
 import styled from 'styled-components/native';
 import { Entry } from '../components/entry/entry';
 import { RefreshControl } from '../components/shared/refresh-control';
-import { Entry as EntryType, useEntries } from '../hooks/entry';
+import { useEntries } from '../hooks/entry';
 import { useDefaultLocale } from '../hooks/locales';
 import { useModels } from '../hooks/models';
 import { ContentStackParamList } from '../navigation/navigation';
@@ -21,57 +21,48 @@ type Props = {
 
 export const Content: FC<Props> = ({ navigation }) => {
   const [search, setSearch] = useState<string | undefined>(undefined);
+  const entries = useEntries();
+  const locale = useDefaultLocale();
+  const models = useModels();
 
-  const { data, isRefetching, refetch, fetchNextPage } = useEntries([
-    { type: 'query', parameter: search },
-  ]);
-  const { data: locale } = useDefaultLocale();
-  const { data: models } = useModels();
+  // useLayoutEffect(() => {
+  //   navigation.setOptions({
+  //     headerSearchBarOptions: {
+  //       onSearchButtonPress: event => setSearch(event.nativeEvent.text),
+  //       onCancelButtonPress: () => setSearch(undefined),
+  //     },
+  //   });
+  // }, [navigation]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerSearchBarOptions: {
-        onSearchButtonPress: event => setSearch(event.nativeEvent.text),
-        onCancelButtonPress: () => setSearch(undefined),
-      },
-    });
-  }, [navigation]);
-
-  console.log(data);
+  console.log(JSON.stringify(locale.error, undefined, 2));
 
   return (
-    <List
+    <FlatList
+      contentInset={{ top: 200 }}
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        <RefreshControl
+          refreshing={entries.isRefetching}
+          onRefresh={entries.refetch}
+        />
       }
       ListHeaderComponent={() => (
         <HContainer horizontal>
-          {models?.items?.map(model => (
+          {models.data?.items?.map(model => (
             <ModelButton key={model.sys.id}>
               <ButtonText>{model.name}</ButtonText>
             </ModelButton>
           ))}
         </HContainer>
       )}
-      data={data?.entries}
+      data={entries.data?.entries}
       renderItem={({ item }) => (
-        <Entry locale={locale?.code} entry={item} key={item?.sys?.id} />
+        <Entry locale={locale.data?.code} entry={item} key={item?.sys?.id} />
       )}
       progressViewOffset={100}
-      onEndReached={() => fetchNextPage()}
+      onEndReached={() => entries.fetchNextPage()}
     />
   );
 };
-
-const List = styled(FlatList as new () => FlatList<EntryType>).attrs(() => ({
-  contentContainerStyle: {
-    paddingHorizontal: 16,
-    backgroundColor: 'white',
-    borderRadius: 8,
-  },
-}))`
-  padding: 8px;
-`;
 
 const HContainer = styled.ScrollView`
   flex-direction: row;

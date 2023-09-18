@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAppSelector } from '../storage/store';
 import { Link } from '../typings/contentful';
 import { LocaleCode } from '../typings/locale';

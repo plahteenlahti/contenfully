@@ -1,19 +1,16 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC } from 'react';
+import { Text } from 'react-native';
 import styled from 'styled-components/native';
-import { Error } from '../components/error/error';
+import { Card } from '../components/card/Card';
 import { FieldIcon, FieldTypeText } from '../components/icons/field-icon';
-import {
-  Container,
-  TitleContainer,
-  UnpaddedContainer,
-} from '../components/shared/container';
+import { UnpaddedContainer } from '../components/shared/container';
 import { RefreshControl } from '../components/shared/refresh-control';
 import { ListButton, ListButtonText } from '../components/shared/text-button';
-import { CardTitle } from '../components/shared/typography';
 import { useModel } from '../hooks/models';
 import { useContentfulUser } from '../hooks/user';
 import { ModelStackParamList } from '../navigation/navigation';
+import { localizedFormatDate } from '../utilities/time';
 
 type Props = NativeStackScreenProps<ModelStackParamList, 'Model'>;
 
@@ -22,62 +19,80 @@ export const Model: FC<Props> = ({
     params: { modelID },
   },
 }) => {
-  const { data, isRefetching, refetch, isError, error } = useModel(modelID);
-  const { data: user } = useContentfulUser(data?.sys.publishedBy.sys.id);
+  const model = useModel(modelID);
+  const updateBy = useContentfulUser(model.data?.sys.updatedBy.sys.id);
+
+  console.log(updateBy.data);
+
   return (
     <ScrollView
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        <RefreshControl
+          refreshing={model.isRefetching}
+          onRefresh={model.refetch}
+        />
       }>
-      {isError && <Error error={error} />}
+      <Card.OuterContainer>
+        <Card.Title>Activity</Card.Title>
+        <Card>
+          <Card.DetailRow title="Updated by" subtitle={updateBy.data?.email} />
+          <Card.Divider />
+          <Card.DetailRow
+            title="Updated"
+            subtitle={
+              model.data?.sys.updatedAt &&
+              localizedFormatDate(new Date(model.data?.sys.updatedAt))
+            }
+          />
+          <Card.Divider />
+          <Card.DetailRow
+            title="Published"
+            subtitle={
+              model.data?.sys.publishedAt &&
+              localizedFormatDate(new Date(model.data?.sys.publishedAt))
+            }
+          />
+        </Card>
+      </Card.OuterContainer>
 
-      <Container>
-        <CardTitle>{data?.name}</CardTitle>
-        <Description>{data?.description}</Description>
+      <Card.OuterContainer>
+        <Card.Title>{model.data?.name}</Card.Title>
+        <Card>
+          <Text>{model.data?.description}</Text>
+        </Card>
+      </Card.OuterContainer>
 
-        <CardTitle>Fields</CardTitle>
-        <Name>{user?.email}</Name>
+      <Card.OuterContainer>
+        <Card.Title>Fields</Card.Title>
+        <Card>
+          {model.data?.fields?.map(field => (
+            <Field key={field.id}>
+              <FieldIcon fieldType={field.type} />
+              <Column>
+                <FieldTitle>{field.name}</FieldTitle>
+                <FieldTypeText fieldType={field.type} />
+              </Column>
+            </Field>
+          ))}
+        </Card>
+      </Card.OuterContainer>
 
-        {data?.fields?.map(field => (
-          <Field key={field.id}>
-            <FieldIcon fieldType={field.type} />
-            <Column>
-              <FieldTitle>{field.name}</FieldTitle>
-              <FieldTypeText fieldType={field.type} />
-            </Column>
-          </Field>
-        ))}
-      </Container>
-
-      <TitleContainer>
-        <CardTitle>Actions</CardTitle>
-      </TitleContainer>
-      <UnpaddedContainer>
-        <ListButton>
-          <ListButtonText>Deactivate model</ListButtonText>
-        </ListButton>
-        <ListButton noBorder>
-          <ListButtonText>Delete model</ListButtonText>
-        </ListButton>
-      </UnpaddedContainer>
+      <Card.OuterContainer>
+        <Card.Title>Actions</Card.Title>
+        <UnpaddedContainer>
+          <ListButton>
+            <ListButtonText>Deactivate model</ListButtonText>
+          </ListButton>
+          <ListButton noBorder>
+            <ListButtonText>Delete model</ListButtonText>
+          </ListButton>
+        </UnpaddedContainer>
+      </Card.OuterContainer>
     </ScrollView>
   );
 };
 
 const ScrollView = styled.ScrollView``;
-
-const Name = styled.Text`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.gray[800]};
-`;
-
-const Description = styled(Name)`
-  margin-top: 4px;
-  font-size: 12px;
-  line-height: 18px;
-  color: ${({ theme }) => theme.colors.gray[600]};
-  margin-bottom: 16px;
-`;
 
 const Field = styled.View`
   flex-direction: row;

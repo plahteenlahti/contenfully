@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { ThemeProvider, useTheme } from 'styled-components/native';
 import { DrawerButton } from '../components/buttons/drawer-button';
@@ -21,7 +21,7 @@ import { resolveColor } from '../utilities/color';
 import { Asset } from '../views/asset';
 import { Assets } from '../views/assets';
 import { Content as ContentEntries } from '../views/entries';
-import { Entry } from '../views/entry';
+import { EntryView } from '../views/entry';
 import { Model } from '../views/model';
 import { Models } from '../views/models';
 import { Settings } from '../views/settings';
@@ -29,6 +29,10 @@ import { Space } from '../views/space';
 import { User } from '../views/user';
 import { Webhook } from '../views/webhook';
 import { Welcome } from '../views/welcome';
+import { useAtomValue } from 'jotai';
+import { tokenAtom } from '../storage/jotai/token';
+import { Contentful } from '../services/contentful';
+import { LocaleView } from '../views/LocaleView';
 
 type SpaceTabParamList = {
   Home: undefined;
@@ -71,6 +75,7 @@ const AssetStack = createNativeStackNavigator<AssetStackParamList>();
 export type SpaceStackParamList = {
   Space: undefined;
   Webhook: { webhookID: string; title: string };
+  Locale: { localeID: string; title: string };
   User: { userID: string; name: string };
 };
 
@@ -81,24 +86,25 @@ const Tab = createBottomTabNavigator<SpaceTabParamList>();
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 
 export const MainNavigation = () => {
-  const { tokens } = useAppSelector(state => state.tokens);
-  const { accentColor } = useAppSelector(state => state.theme);
-  const { theme, dark, light } = useThemeScheme();
+  const token = useAtomValue(tokenAtom);
+  const { theme, dark, light, barStyle } = useThemeScheme();
+
+  useEffect(() => {
+    const init = async () => {
+      Contentful.init(token?.content);
+    };
+
+    init();
+  }, [token?.content]);
 
   return (
     <ThemeProvider
       theme={{
         ...defaultTheme,
-        accent: accentColor,
-        theme: theme ?? defaultTheme.theme,
-        dark: dark ?? defaultTheme.dark,
-        light: light ?? defaultTheme.light,
       }}>
-      <StatusBar
-        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+      <StatusBar barStyle={barStyle} />
       <MainStack.Navigator
-        initialRouteName={tokens?.length > 0 ? 'Drawer' : 'Welcome'}>
+        initialRouteName={token?.content ? 'Drawer' : 'Welcome'}>
         <MainStack.Screen
           name="Welcome"
           component={Welcome}
@@ -210,7 +216,7 @@ const ContentNavigator = () => {
         }}
         component={ContentEntries}
       />
-      <ContentStack.Screen name="Entry" component={Entry} />
+      <ContentStack.Screen name="Entry" component={EntryView} />
     </ContentStack.Navigator>
   );
 };
@@ -223,23 +229,23 @@ export type ModelStackParamList = {
 const ModelStack = createNativeStackNavigator<ModelStackParamList>();
 
 const ModelNavigator = () => {
-  const theme = useTheme();
-
   return (
     <ModelStack.Navigator
-      screenOptions={{
-        headerLargeTitle: true,
-        headerLargeTitleShadowVisible: false,
-        headerShadowVisible: false,
-        headerTintColor: theme.colors[theme.accent][500],
-        headerStyle: {
-          backgroundColor: resolveColor(theme, 'background'),
-        },
-        headerLargeTitleStyle: {
-          fontFamily: font.bold,
-          color: resolveColor(theme, 'text'),
-        },
-      }}>
+      screenOptions={
+        {
+          // headerLargeTitle: true,
+          // headerLargeTitleShadowVisible: false,
+          // headerShadowVisible: false,
+          // headerTintColor: theme.colors[theme.accent][500],
+          // headerStyle: {
+          //   backgroundColor: resolveColor(theme, 'background'),
+          // },
+          // headerLargeTitleStyle: {
+          //   fontFamily: font.bold,
+          //   color: resolveColor(theme, 'text'),
+          // },
+        }
+      }>
       <ModelStack.Screen
         name="Models"
         options={{
@@ -259,11 +265,7 @@ const AssetNavigator = () => {
       screenOptions={{
         headerLargeTitle: true,
         headerLargeTitleShadowVisible: false,
-        headerShadowVisible: false,
         headerTintColor: theme.colors[theme.accent][500],
-        headerStyle: {
-          backgroundColor: resolveColor(theme, 'background'),
-        },
         headerLargeTitleStyle: {
           fontFamily: font.bold,
           color: resolveColor(theme, 'text'),
@@ -290,16 +292,12 @@ const AssetNavigator = () => {
 
 const SpaceNavigator = () => {
   const theme = useTheme();
+  const headerLeft = useCallback(() => <DrawerButton />, []);
+
   return (
     <SpaceStack.Navigator
       screenOptions={{
-        headerLargeTitle: true,
-        headerLargeTitleShadowVisible: false,
-        headerShadowVisible: false,
         headerTintColor: theme.colors[theme.accent][500],
-        headerStyle: {
-          backgroundColor: resolveColor(theme, 'background'),
-        },
         headerLargeTitleStyle: {
           fontFamily: font.bold,
           color: resolveColor(theme, 'text'),
@@ -308,9 +306,16 @@ const SpaceNavigator = () => {
       <SpaceStack.Screen
         name="Space"
         options={{
-          headerLeft: () => <DrawerButton />,
+          headerLeft: headerLeft,
         }}
         component={Space}
+      />
+      <SpaceStack.Screen
+        name="Locale"
+        options={{
+          headerLeft: headerLeft,
+        }}
+        component={LocaleView}
       />
       <SpaceStack.Screen
         name="User"

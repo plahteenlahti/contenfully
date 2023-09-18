@@ -1,114 +1,35 @@
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
+import { Contentful } from '../services/contentful';
 import { useAppSelector } from '../storage/store';
 
-const BASE_URL = 'https://api.contentful.com';
-
-type User = {
-  sys: {
-    type: string;
-    id: string;
-    version: 1;
-    createdAt: string;
-    updatedAt: string;
-  };
-  cookieConsentData: string; // in JSON format
-  firstName: string;
-  lastName: string;
-  avatarUrl: string;
-  email: string;
-  activated: boolean;
-  signInCount: number;
-  confirmed: boolean;
-  '2faEnabled': boolean;
-};
-
-type Response = {
-  total: number;
-  limit: number;
-  skip: number;
-  sys: {
-    type: 'Array';
-  };
-  items: User[];
-};
-
 export const useUser = () => {
-  const { selected } = useAppSelector(state => state.tokens);
-
-  return useQuery<User, Error>(
-    ['user', selected],
-    async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${selected?.content}`,
-          },
-        });
-
-        return response.json();
-      } catch (error) {
-        return error;
-      }
-    },
-    {
-      enabled: !!selected,
-    },
-  );
+  return useQuery(['user'], async () => Contentful.Me.get());
 };
 
-export const useContentfulUser = (id?: string) => {
+export const useContentfulUser = (userId?: string) => {
   const {
-    tokens: { selected },
     space: { space },
   } = useAppSelector(state => state);
 
-  return useQuery<User, Error>(
-    ['user', selected, id],
-    async () => {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/spaces/${space}/users/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${selected?.content}`,
-            },
-          },
-        );
-
-        return response.json();
-      } catch (error) {
-        return error;
-      }
-    },
+  return useQuery(
+    ['user', userId],
+    async () => await Contentful.Users.getById(space, userId),
     {
-      enabled: !!selected && !!id && !!space,
+      enabled: !!space && !!userId,
     },
   );
 };
 
 export const useUsers = () => {
   const {
-    tokens: { selected },
     space: { space },
   } = useAppSelector(state => state);
 
-  return useQuery<Response, Error>(
+  return useQuery(
     ['users', space],
-    async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/spaces/${space}/users`, {
-          headers: {
-            Authorization: `Bearer ${selected?.content}`,
-          },
-        });
-
-        return response.json();
-      } catch (error) {
-        return error;
-      }
-    },
+    async () => await Contentful.Users.getAll(space),
     {
-      enabled: !!space && !!selected,
+      enabled: !!space,
     },
   );
 };

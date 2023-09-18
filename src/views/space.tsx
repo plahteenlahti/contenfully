@@ -1,29 +1,25 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC } from 'react';
-import styled from 'styled-components/native';
-import { Locales } from '../components/locale/locales';
+import { Locales } from '../components/locale/Locales';
 import { AllUsers } from '../components/user/all-users';
-import { Me } from '../components/user/me';
-import { Webhooks } from '../components/webhooks/webhooks';
+
+import { ScrollView } from 'react-native';
 import { SpaceStackParamList } from '../navigation/navigation';
-import { resolveColor } from '../utilities/color';
+import { SpaceDetails } from '../components/space/SpaceDetails';
+import { WebhooksOverview } from '../components/webhooks/WebhooksOverview';
 
 export type SpaceScreenProps = NativeStackScreenProps<
   SpaceStackParamList,
   'Space'
 >;
 
-export const Space: FC<SpaceScreenProps> = () => {
+export const Space: FC<SpaceScreenProps> = ({ navigation }) => {
   return (
     <ScrollView>
-      <Me />
-      <Locales />
+      <SpaceDetails />
+      <WebhooksOverview />
+      <Locales navigation={navigation} />
       <AllUsers />
-      <Webhooks />
     </ScrollView>
   );
 };
-
-const ScrollView = styled.ScrollView`
-  background-color: ${({ theme }) => resolveColor(theme, 'background')};
-`;

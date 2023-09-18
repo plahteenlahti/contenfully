@@ -5,12 +5,13 @@ import { NotificationsSettings } from '../components/notifications/notifications
 import { TokenItem } from '../components/settings/token-item';
 import { PrimaryButton } from '../components/shared/button';
 import { Container } from '../components/shared/container';
-import { ScrollView } from '../components/shared/scroll-view';
 import { CardDescription, CardTitle } from '../components/shared/typography';
 import { ThemePicker } from '../components/theme-picker/theme-picker';
 import { addToken } from '../storage/reducers/token';
 import { useAppDispatch, useAppSelector } from '../storage/store';
 import { resolveColor } from '../utilities/color';
+import { ScrollView, Text } from 'react-native';
+import { Card } from '../components/card/Card';
 
 export const Settings: FC = () => {
   const { tokens, selected } = useAppSelector(state => state.tokens);
@@ -43,23 +44,25 @@ export const Settings: FC = () => {
   };
 
   return (
-    <ScrollView>
-      <Container>
-        <CardTitle selectable>Management tokens {deviceToken}</CardTitle>
-        <CardDescription>
-          To create a Contentful Management token in Contentful dashboard,
-          follow these instructions.
-        </CardDescription>
-        {tokens?.map(token => (
-          <TokenItem
-            simultaneousHandlers={scrollRef}
-            key={token.name}
-            selected={selected?.name === token.name}
-            token={token}
-          />
-        ))}
+    <ScrollView className="bg-gray-100">
+      <Card.OuterContainer>
+        <Card.Title>Management tokens</Card.Title>
+        <Card>
+          <Text>
+            To create a Contentful Management token in Contentful dashboard,
+            follow these instructions.
+          </Text>
+          {tokens?.map(token => (
+            <TokenItem
+              simultaneousHandlers={scrollRef}
+              key={token.name}
+              selected={selected?.name === token.name}
+              token={token}
+            />
+          ))}
+        </Card>
 
-        <CardTitle>Add new Token</CardTitle>
+        <Card.Title>Add new Token</Card.Title>
         <InputLabel>Token name</InputLabel>
         <Controller
           name="name"
@@ -103,14 +106,14 @@ export const Settings: FC = () => {
           buttonText="Add Token"
           onPress={handleSubmit(submit)}
         />
-      </Container>
+      </Card.OuterContainer>
 
-      <NotificationsSettings />
-
-      <Container>
-        <CardTitle>Theme</CardTitle>
-        <ThemePicker />
-      </Container>
+      <Card.OuterContainer>
+        <Card.Title>Theme</Card.Title>
+        <Card>
+          <ThemePicker />
+        </Card>
+      </Card.OuterContainer>
     </ScrollView>
   );
 };

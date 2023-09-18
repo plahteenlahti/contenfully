@@ -9,25 +9,29 @@ import { formatTimestamp } from '../../utilities/time';
 import { ContentViewNavigationProp } from '../../views/entries';
 import { Chevron } from '../icons/chevron';
 import { Draft, Published } from '../shared/published';
+import { TouchableOpacity } from 'react-native';
+import { z } from 'zod';
+import { Code } from '../../schemas/locale';
 
 type Props = {
-  locale: LocaleCode | undefined;
+  locale: z.infer<typeof Code> | undefined | null;
   entry?: EntryType;
 };
 
 export const Entry: FC<Props> = ({ entry, locale }) => {
-  const { data: model } = useModel(entry?.sys?.contentType?.sys?.id);
+  const model = useModel(entry?.sys?.contentType?.sys?.id);
   const navigation = useNavigation<ContentViewNavigationProp['navigation']>();
 
   return (
-    <Container
+    <TouchableOpacity
+      className="flex-row bg-white px-2 py-2"
       onPress={() =>
         navigation.navigate('Entry', { entryID: `${entry?.sys.id}` })
       }>
       <Column>
         <TopRow>
-          {model?.displayField && locale && (
-            <Title>{entry?.fields?.[model?.displayField]?.[locale]}</Title>
+          {model.data?.displayField && locale && (
+            <Title>{entry?.fields?.[model.data?.displayField]?.[locale]}</Title>
           )}
           {entry?.sys?.updatedAt === entry?.sys.publishedAt ? (
             <Published />
@@ -40,15 +44,9 @@ export const Entry: FC<Props> = ({ entry, locale }) => {
         </Updated>
       </Column>
       <Chevron />
-    </Container>
+    </TouchableOpacity>
   );
 };
-
-const Container = styled.TouchableOpacity`
-  padding: 8px 0px;
-  flex-direction: row;
-  align-items: center;
-`;
 
 const Title = styled.Text`
   font-size: 13px;

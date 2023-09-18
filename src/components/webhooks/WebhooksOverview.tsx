@@ -6,48 +6,27 @@ import { useAppSelector } from '../../storage/store';
 import { Container, TitleContainer } from '../shared/container';
 import { CardTitle } from '../shared/typography';
 import { WebhookItem } from './webhook-item';
+import { Card } from '../card/Card';
 
-type Props = {
-  spaceID?: string;
-};
-
-export const Webhooks: FC<Props> = () => {
-  const { data: webhooks } = useWebhooks();
+export const WebhooksOverview = () => {
+  const webhooks = useWebhooks();
   const { mutate: removeHook } = useDeleteWebhook();
   const { mutate: createH } = useCreateNotifications();
   const { deviceToken } = useAppSelector(state => state.notifications);
 
-  const debug = () => {
-    createH({
-      name: 'Contentfully notifications',
-      url: 'https://netli.fyi/functions/contentfully',
-      topics: ['Entry.create', 'ContentType.create', '*.publish', 'Asset.*'],
-      filters: [],
-      headers: [
-        {
-          key: 'deviceToken',
-          value: `${deviceToken}`,
-        },
-      ],
-    });
-  };
-
   return (
-    <>
-      <TitleContainer>
-        <CardTitle>Webhooks</CardTitle>
-      </TitleContainer>
+    <Card.OuterContainer>
+      <Card.Title>Webhooks</Card.Title>
 
-      <Container>
-        <Button title="Test" onPress={debug} />
-        {webhooks?.map(hook => (
+      <Card className="overflow-hidden">
+        {webhooks.data?.items.map(hook => (
           <WebhookItem
             removeHook={removeHook}
             key={hook?.sys?.id}
             hook={hook}
           />
         ))}
-      </Container>
-    </>
+      </Card>
+    </Card.OuterContainer>
   );
 };

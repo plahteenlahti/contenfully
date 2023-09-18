@@ -7,12 +7,9 @@ type Props = {
 };
 
 export const Chevron: FC<Props> = () => {
-  const {
-    colors: { gray },
-  } = useTheme();
   return (
     <Svg
-      fill={gray[400]}
+      className="fill-gray-400"
       strokeWidth="1.5px"
       strokeLinecap="round"
       strokeLinejoin="round"

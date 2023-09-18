@@ -5,7 +5,7 @@ import { useAppSelector } from '../storage/store';
 export const useThemeScheme = (): Pick<
   ThemeState,
   'dark' | 'light' | 'theme'
-> => {
+> & { barStyle: 'light-content' | 'dark-content' } => {
   const { useSystemTheme, theme, dark, light } = useAppSelector(
     state => state.theme,
   );
@@ -13,9 +13,9 @@ export const useThemeScheme = (): Pick<
 
   if (useSystemTheme) {
     return isDarkMode
-      ? { theme: 'dark', dark, light }
-      : { theme: 'light', dark, light };
+      ? { theme: 'dark', dark, light, barStyle: 'light-content' }
+      : { theme: 'light', dark, light, barStyle: 'dark-content' };
   } else {
-    return { theme: theme, dark, light };
+    return { theme: theme, dark, light, barStyle: 'light-content' };
   }
 };

@@ -1,5 +1,5 @@
 import { setupServer } from 'msw/node';
-import { setLogger } from 'react-query';
+import { setLogger } from '@tanstack/react-query';
 import { rest } from 'msw';
 import 'cross-fetch/polyfill';
 
