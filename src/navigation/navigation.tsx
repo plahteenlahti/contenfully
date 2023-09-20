@@ -30,7 +30,7 @@ import { User } from '../views/user';
 import { Webhook } from '../views/webhook';
 import { Welcome } from '../views/welcome';
 import { useAtomValue } from 'jotai';
-import { tokenAtom } from '../storage/jotai/token';
+import { tokenAtom, useTokenAtom } from '../storage/jotai/atoms';
 import { Contentful } from '../services/contentful';
 import { LocaleView } from '../views/LocaleView';
 
@@ -86,12 +86,14 @@ const Tab = createBottomTabNavigator<SpaceTabParamList>();
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 
 export const MainNavigation = () => {
-  const token = useAtomValue(tokenAtom);
+  const [token, setToken] = useTokenAtom();
   const { theme, dark, light, barStyle } = useThemeScheme();
 
   useEffect(() => {
     const init = async () => {
-      Contentful.init(token?.content);
+      if (token) {
+        Contentful.init(token.content);
+      }
     };
 
     init();

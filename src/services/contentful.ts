@@ -5,14 +5,12 @@ import {
   ModelSchema,
   allUsersSchema,
   environmentSchema,
-  localeSchema,
-  spaceSchema,
   userSchema,
 } from '../schemas/contentful';
-import { SpaceCollectionSchema, SpaceSchema } from '../schemas/space';
 import { EntryCollectionSchema, EntrySchema } from '../schemas/entry';
-import { WebookCollectionSchema } from '../schemas/webhook';
 import { LocaleCollectionSchema, LocaleSchema } from '../schemas/locale';
+import { SpaceCollectionSchema, SpaceSchema } from '../schemas/space';
+import { WebookCollectionSchema } from '../schemas/webhook';
 
 const CONTENTFUL_BASE_URL = 'https://api.contentful.com';
 
@@ -39,7 +37,7 @@ class ContentfulClient {
       timeout: 10000,
       prefixUrl: CONTENTFUL_BASE_URL,
       headers: {
-        Authorization: 'Bearer',
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
         ky,
         hooks: {
@@ -151,6 +149,19 @@ class ContentfulClient {
         .json();
 
       return EntrySchema.parse(data);
+    },
+  };
+
+  Assets = {
+    getAll: async (space?: string, environment?: string) => {
+      const data = await this.connection.get(
+        `spaces/${space}/environments/${environment}/assets`,
+      );
+    },
+    getByID: async (space?: string, environment?: string, assetID?: string) => {
+      const data = await this.connection.get(
+        `spaces/${space}/environments/${environment}/assets/${assetID}`,
+      );
     },
   };
 

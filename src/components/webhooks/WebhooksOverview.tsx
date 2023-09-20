@@ -12,7 +12,6 @@ export const WebhooksOverview = () => {
   const webhooks = useWebhooks();
   const { mutate: removeHook } = useDeleteWebhook();
   const { mutate: createH } = useCreateNotifications();
-  const { deviceToken } = useAppSelector(state => state.notifications);
 
   return (
     <Card.OuterContainer>

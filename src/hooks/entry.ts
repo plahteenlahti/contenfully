@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { BASE_URL } from '../constants/constants';
 import { Contentful } from '../services/contentful';
 import { useAppSelector } from '../storage/store';
+import { useEnvAtom, useSpaceAtom } from '../storage/jotai/atoms';
 
 type QueryParams = {
   type: 'limit' | 'skip' | 'order' | 'query';
@@ -11,9 +12,8 @@ type QueryParams = {
 type QueryOptions = QueryParams[];
 
 export const useEntries = (queryOptions?: QueryOptions) => {
-  const {
-    space: { space, environment },
-  } = useAppSelector(state => state);
+  const [space] = useSpaceAtom();
+  const [environment] = useEnvAtom();
 
   // queryOptions?.forEach(({ type, parameter }) => {
   //   if (type && parameter) {
@@ -47,9 +47,8 @@ export const useEntries = (queryOptions?: QueryOptions) => {
 };
 
 export const useEntry = (entryID?: string) => {
-  const {
-    space: { space, environment },
-  } = useAppSelector(state => state);
+  const [space] = useSpaceAtom();
+  const [environment] = useEnvAtom();
 
   return useQuery(
     ['entry', space, environment, entryID],

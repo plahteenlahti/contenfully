@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 import styled from 'styled-components/native';
 import { MainStackParamList } from '../navigation/navigation';
 import { Contentful } from '../services/contentful';
-import { tokenAtom } from '../storage/jotai/token';
+import { tokenAtom } from '../storage/jotai/atoms';
 import { font } from '../styles';
 
 const icon = require('../assets/app-icon.png');
@@ -30,15 +30,17 @@ export const Welcome: FC<Props> = ({ navigation }) => {
   });
 
   const submit = async ({ content }: { content: string }) => {
-    try {
-      const tokenContent = await Contentful.validateToken(content);
-      if (tokenContent.valid) {
-        setToken({ email: tokenContent.email, content: content });
-        navigation.navigate('Drawer');
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    setToken({ email: 'test', content });
+    navigation.navigate('Drawer');
+    // try {
+    //   const tokenContent = await Contentful.validateToken(content);
+    //   if (tokenContent.valid) {
+    //     setToken({ email: tokenContent.email, content: content });
+    //     navigation.navigate('Drawer');
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    // }
   };
 
   return (
@@ -56,7 +58,7 @@ export const Welcome: FC<Props> = ({ navigation }) => {
           </PanGestureHandler>
         </Column>
         <Title>Contentfully</Title>
-        <Subtitle>Manage your Contentful Space {token?.name}</Subtitle>
+        <Subtitle>Manage your Contentful Space</Subtitle>
 
         <InputLabel>Token</InputLabel>
         <Controller

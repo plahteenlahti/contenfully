@@ -7,6 +7,7 @@ import { setEnvironment, setSpace } from '../../storage/reducers/space';
 import { useAppDispatch } from '../../storage/store';
 import { z } from 'zod';
 import { SpaceSchema } from '../../schemas/space';
+import { useEnvAtom, useSpaceAtom } from '../../storage/jotai/atoms';
 
 type Props = {
   space: z.infer<typeof SpaceSchema>;
@@ -17,10 +18,12 @@ type Props = {
 export const SpaceCard: FC<Props> = ({ space, id, navigation }) => {
   const environment = useEnvironment(id);
   const dispatch = useAppDispatch();
+  const [_space, setSpace] = useSpaceAtom();
+  const [_env, setEnv] = useEnvAtom();
 
   const navigateToSpace = (environmentID: string) => {
-    dispatch(setSpace(id));
-    dispatch(setEnvironment(environmentID));
+    setSpace(id);
+    setEnv(environmentID);
     navigation.navigate('Space', { id });
   };
 
