@@ -1,47 +1,65 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useAtom } from 'jotai';
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import {
+  KeyboardAvoidingView,
+  Text,
+  TextInput,
+  TouchableHighlight,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import styled from 'styled-components/native';
 import { MainStackParamList } from '../navigation/navigation';
 import { Contentful } from '../services/contentful';
-import { tokenAtom } from '../storage/jotai/atoms';
+import { useToken } from '../storage/store';
 import { font } from '../styles';
 
 const icon = require('../assets/app-icon.png');
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Welcome'>;
 
-export const Welcome: FC<Props> = ({ navigation }) => {
-  const [token, setToken] = useAtom(tokenAtom);
+type Form = {
+  content: string | undefined;
+};
 
+export const Welcome: FC<Props> = ({ navigation }) => {
+  const [token, setToken] = useToken();
+  const [account, setAccount] = useState('');
   const {
     control,
     handleSubmit,
     formState: { isValid },
-  } = useForm({
+    watch,
+  } = useForm<Form>({
     mode: 'onChange',
     defaultValues: {
-      name: undefined,
-      content: undefined,
+      content: token?.content,
     },
   });
 
-  const submit = async ({ content }: { content: string }) => {
-    setToken({ email: 'test', content });
-    navigation.navigate('Drawer');
-    // try {
-    //   const tokenContent = await Contentful.validateToken(content);
-    //   if (tokenContent.valid) {
-    //     setToken({ email: tokenContent.email, content: content });
-    //     navigation.navigate('Drawer');
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    // }
+  const submit = async ({ content }: { content: undefined | string }) => {
+    if (content) {
+      setToken({ email: account, content: content });
+      navigation.navigate('Drawer');
+    }
   };
+
+  useEffect(() => {
+    const subscription = watch(async (value, { name, type }) => {
+      try {
+        if (value.content) {
+          const tokenContent = await Contentful.validateToken(value.content);
+          if (tokenContent.valid) {
+            setAccount(tokenContent.email);
+          }
+        }
+      } catch (error) {
+        console.log('ERROR', error);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   return (
     <SafeAreaView>
@@ -49,42 +67,63 @@ export const Welcome: FC<Props> = ({ navigation }) => {
         <LargeCircle />
         <SmallCircle />
       </Background>
-      <ScrollView>
-        <Column>
-          <PanGestureHandler>
-            <IconContainer>
+      <ScrollView contentContainerStyle={{ flex: 1 }}>
+        <KeyboardAvoidingView className="flex-1">
+          <Column>
+            <View>
               <Icon source={icon} />
-            </IconContainer>
-          </PanGestureHandler>
-        </Column>
-        <Title>Contentfully</Title>
-        <Subtitle>Manage your Contentful Space</Subtitle>
+            </View>
+          </Column>
+          <Text className="text-center text-4xl font-bold text-gray-700">
+            Contentfully
+          </Text>
+          <Text className="text-md mb-10 mt-2 text-center font-medium text-gray-600">
+            Manage your Contentful Space
+          </Text>
 
-        <InputLabel>Token</InputLabel>
-        <Controller
-          name="content"
-          control={control}
-          rules={{
-            required: true,
-          }}
-          render={({
-            field: { onChange, onBlur },
-            fieldState: { isTouched, invalid },
-          }) => (
-            <Input
-              onChangeText={onChange}
-              onBlur={onBlur}
-              hasErrors={isTouched && invalid}
-              textContentType="password"
-              returnKeyType="done"
-              placeholder="1234Token55678"
-            />
-          )}
-        />
+          <View className="w-full flex-row items-center overflow-hidden rounded-full border border-gray-300 bg-white px-5 py-2 shadow">
+            <View className="flex-1">
+              <Controller
+                name="content"
+                control={control}
+                rules={{
+                  required: true,
+                }}
+                render={({ field: { onChange, onBlur } }) => (
+                  <TextInput
+                    className="text-base text-gray-900"
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    textContentType="password"
+                    returnKeyType="done"
+                    placeholder="1234Token55678"
+                    clearButtonMode="while-editing"
+                  />
+                )}
+              />
+            </View>
 
-        <Button disabled={!isValid} onPress={handleSubmit(submit)}>
-          <ButtonText>Authorize</ButtonText>
-        </Button>
+            <TouchableOpacity className="h-10 w-10 rounded-full bg-indigo-600"></TouchableOpacity>
+          </View>
+
+          <Text className="mt-2 text-center text-sm text-gray-500">
+            How to find management token.
+          </Text>
+          <View className="h-14 rounded-md bg-white shadow-sm">
+            <Text className="font-sm text-base text-gray-600">
+              Account found!
+            </Text>
+            <Text className="font-sm text-base text-gray-600">{account}</Text>
+          </View>
+          <TouchableHighlight
+            className="absolute bottom-2 mt-8 w-full rounded-md bg-indigo-600 p-4"
+            disabled={!account}
+            onPress={handleSubmit(submit)}>
+            <Text className="text-center text-base font-medium text-white">
+              Authorize
+            </Text>
+          </TouchableHighlight>
+        </KeyboardAvoidingView>
       </ScrollView>
     </SafeAreaView>
   );
@@ -116,7 +155,7 @@ const SmallCircle = styled.View`
   width: 120px;
   height: 120px;
   border-radius: 150px;
-  background-color: ${({ theme }) => theme.colors.gray[50]};
+  background-color: ${({ theme }) => theme.colors.gray[100]};
   border-color: ${({ theme }) => theme.colors.gray[200]};
   border-width: 10px;
   right: 240px;
@@ -149,60 +188,9 @@ const Icon = styled.Image`
   border-radius: 14px;
 `;
 
-const IconContainer = styled(Animated.View)``;
-
 const Column = styled.View`
   margin: 32px 0px;
   flex-direction: column;
   align-items: center;
   z-index: 20;
-`;
-
-const InputLabel = styled.Text`
-  font-size: 12px;
-  margin-bottom: 4px;
-  font-family: 'Inter-Regular';
-  color: ${({ theme }) => theme.colors.gray[500]};
-`;
-
-type TextInputProps = {
-  hasErrors: undefined | boolean;
-};
-
-const Input = styled.TextInput<TextInputProps>`
-  margin: 4px 0px 16px;
-  border-width: 1px;
-  border-color: ${({ theme, hasErrors }) =>
-    hasErrors ? theme.colors.red[400] : theme.colors.gray[400]};
-  padding: 8px;
-  font-family: ${font.regular};
-  border-radius: 8px;
-  font-size: 13px;
-  color: ${({ theme }) =>
-    theme.theme === 'light' ? theme.colors.gray[900] : theme.colors.gray[600]};
-`;
-
-const HelpText = styled.Text`
-  color: ${({ theme }) => theme.colors.gray[500]};
-  font-family: ${font.regular};
-  line-height: 20px;
-  font-size: 12px;
-  text-align: center;
-  margin-bottom: 8px;
-`;
-
-const Button = styled.TouchableOpacity`
-  background-color: ${({ theme, disabled }) =>
-    disabled ? theme.colors.indigo[300] : theme.colors.indigo[500]};
-  padding: 16px;
-  border-radius: 8px;
-  margin-top: 32px;
-`;
-
-const ButtonText = styled.Text`
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  text-align: center;
-  font-family: ${font.medium};
 `;

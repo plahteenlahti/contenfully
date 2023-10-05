@@ -28,10 +28,10 @@ export const AllUsers = () => {
   return (
     <Card.OuterContainer>
       <Card.Title>Users</Card.Title>
-      <Card>
+      <Card className="pt-2">
         {users.data?.items?.map((user, index) => (
           <TouchableOpacity
-            className="flex-row items-center"
+            className="flex-row items-center px-2"
             key={user.sys.id}
             onPress={() =>
               navigation.navigate('User', {

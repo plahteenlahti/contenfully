@@ -1,109 +1,144 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAppSelector } from '../storage/store';
 import { Contentful } from '../services/contentful';
-
-const BASE_URL = 'https://api.contentful.com';
+import { useSpace } from '../storage/store';
+import { WebhookSchema } from '../schemas/webhook';
+import { z } from 'zod';
 
 export const useWebhooks = () => {
-  const {
-    space: { space },
-  } = useAppSelector(state => state);
+  const [spaceID] = useSpace();
 
   return useQuery(
-    ['webhooks', { space }],
-    async () => await Contentful.Webhooks.getAll(space),
+    ['webhooks', { spaceID }],
+    async () => {
+      if (!spaceID) {
+        return null;
+      }
+      return await Contentful.Webhooks.getAll(spaceID);
+    },
     {
-      enabled: !!space,
+      enabled: !!spaceID,
     },
   );
 };
 
-export const useWebhook = (id: string) => {
-  const {
-    tokens: { selected },
-    space: { space },
-  } = useAppSelector(state => state);
+export const useWebhook = (webhookID: string) => {
+  const [spaceID] = useSpace();
 
   return useQuery(
-    ['webhooks', id, { space }],
+    ['webhooks', spaceID, webhookID],
     async () => {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/spaces/${space}/webhook_definitions/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${selected?.content}`,
-            },
-          },
-        );
-
-        return response.json();
-      } catch (error) {
-        return error;
+      if (!spaceID || !webhookID) {
+        return null;
       }
+
+      return Contentful.Webhooks.getByID(spaceID, webhookID);
     },
     {
-      enabled: !!space && !!selected,
-    },
-  );
-};
-
-export const useWebhookHealth = (id: string) => {
-  const {
-    tokens: { selected },
-    space: { space },
-  } = useAppSelector(state => state);
-
-  return useQuery(
-    ['webhooks', id, 'health', space],
-    async () => {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/spaces/${space}/webhooks/${id}/health`,
-          {
-            headers: {
-              Authorization: `Bearer ${selected?.content}`,
-            },
-          },
-        );
-
-        return response.json();
-      } catch (error) {
-        return error;
-      }
-    },
-    {
-      enabled: !!space && !!selected,
+      enabled: !!spaceID,
     },
   );
 };
 
 export const useDeleteWebhook = () => {
-  const {
-    tokens: { selected },
-    space: { space },
-  } = useAppSelector(state => state);
-  const queryClient = useQueryClient();
+  const [spaceID] = useSpace();
 
+  return useMutation(async (webhookID: string) => {
+    if (!spaceID || !webhookID) {
+      return null;
+    }
+
+    return await Contentful.Webhooks.deleteByID(spaceID, webhookID);
+  });
+};
+
+type Webhook = z.infer<typeof WebhookSchema>;
+type WebhookMutation = Partial<Omit<z.infer<typeof WebhookSchema>, 'sys'>>;
+type MutationData = {
+  fields: WebhookMutation;
+  version: number;
+  webhookID: string;
+};
+
+export const useUpdateWebhook = () => {
+  const [spaceID] = useSpace();
+  const queryClient = useQueryClient();
   return useMutation(
-    async (id: string) => {
-      const response = await fetch(
-        `${BASE_URL}/spaces/${space}/webhook_definitions/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${selected?.content}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error('Something went wrong');
+    async (data: MutationData) => {
+      if (!spaceID || !data.webhookID) {
+        return null;
       }
+
+      return await Contentful.Webhooks.updateByID(
+        spaceID,
+        data.webhookID,
+        data.fields,
+        data.version,
+      );
     },
     {
-      onSuccess: () => {
-        queryClient.resetQueries('webhooks');
+      onMutate: async update => {
+        await queryClient.cancelQueries([
+          'webhooks',
+          spaceID,
+          update.webhookID,
+        ]);
+        const previousValues = queryClient.getQueryData<Webhook>([
+          'webhooks',
+          spaceID,
+          update.webhookID,
+        ]);
+        queryClient.setQueryData<Webhook>(
+          ['webhooks', spaceID, update.webhookID],
+          {
+            ...previousValues,
+            ...update.fields,
+          },
+        );
+
+        return { previousValues, update };
       },
+      onError: (error, update, context) => {
+        if (context?.previousValues) {
+          queryClient.setQueryData<Webhook>(
+            ['locale', spaceID, context.update.webhookID],
+            context.previousValues,
+          );
+        }
+      },
+      onSettled: update => {
+        queryClient.invalidateQueries<Locale>({
+          queryKey: ['locale', spaceID, update?.sys.id],
+        });
+      },
+    },
+  );
+};
+
+export const createWebhook = () => {
+  const [spaceID] = useSpace();
+
+  return useMutation(async (webhookID: string) => {
+    if (!spaceID || !webhookID) {
+      return null;
+    }
+
+    return await Contentful.Webhooks.create(spaceID, webhookID);
+  });
+};
+
+export const useWebhookHealth = (webhookID: string) => {
+  const [spaceID] = useSpace();
+
+  return useQuery(
+    ['webhooks', 'health', spaceID, webhookID],
+    async () => {
+      if (!spaceID || !webhookID) {
+        return null;
+      }
+      Contentful.Webhooks.getHealthByID(spaceID, webhookID);
+    },
+    {
+      enabled: !!spaceID && !!webhookID,
     },
   );
 };

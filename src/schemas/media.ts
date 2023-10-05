@@ -1,65 +1,44 @@
 import { z } from 'zod';
+import { LocaleOption } from './locale';
 
-export type Media = {
-  metadata: {
-    tags: [];
-  };
-  sys: {
-    space: {
-      sys: Link;
-    };
-    id: string;
-    type: string;
-    createdAt: string;
-    updatedAt: string;
-    environment: {
-      sys: Link;
-    };
-    publishedVersion: number;
-    publishedAt: string;
-    firstPublishedAt: string;
-    createdBy: {
-      sys: Link;
-    };
-    updatedBy: {
-      sys: Link;
-    };
-    publishedCounter: number;
-    version: number;
-    publishedBy: {
-      sys: Link;
-    };
-  };
-  fields: {
-    title: {
-      [key in LocaleCode]: string;
-    };
-    file: {
-      [key in LocaleCode]: {
-        url: string;
-        details: {
-          size: number;
-          image: {
-            width: number;
-            height: number;
-          };
-        };
-        fileName: string;
-        contentType: string;
-      };
-    };
-  };
-};
+const LinkSysSchema = z.object({
+  type: z.string(),
+  linkType: z.string(),
+  id: z.string(),
+});
 
-type Response = {
-  sys: {
-    type: string;
-  };
-  total: number;
-  skip: number;
-  limit: number;
-  items: Media[];
-};
+const UserLinkSchema = z.object({
+  sys: LinkSysSchema.extend({
+    linkType: z.literal('User'),
+  }),
+});
+
+const SysSchema = z.object({
+  space: z.object({
+    sys: LinkSysSchema.extend({
+      linkType: z.literal('Space'),
+      id: z.string(),
+    }),
+  }),
+  id: z.string(),
+  type: z.literal('Asset'),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  environment: z.object({
+    sys: LinkSysSchema.extend({
+      linkType: z.literal('Environment'),
+      id: z.string(),
+    }),
+  }),
+  publishedVersion: z.number().optional(),
+  publishedAt: z.string().optional(),
+  firstPublishedAt: z.string(),
+  createdBy: UserLinkSchema,
+  updatedBy: UserLinkSchema,
+  publishedCounter: z.number(),
+  version: z.number(),
+  publishedBy: UserLinkSchema.optional(),
+});
 
 const FileSchema = z.object({
   url: z.string(),
@@ -74,18 +53,18 @@ const FileSchema = z.object({
   contentType: z.string(),
 });
 
-const MediaSchema = z.object({
+export const MediaSchema = z.object({
   metadata: z.object({
-    tags: z.array(z.any()), // Specify item type of array if known
+    tags: z.array(z.any()),
   }),
-  sys: Sys,
+  sys: SysSchema,
   fields: z.object({
-    title: z.record(LocaleCode, z.string()),
-    file: z.record(LocaleCode, FileSchema),
+    title: z.record(z.string(), z.string()),
+    file: z.record(z.string(), FileSchema),
   }),
 });
 
-const MediaCollectionSchema = z.object({
+export const MediaCollectionSchema = z.object({
   sys: z.object({
     type: z.string(),
   }),

@@ -1,12 +1,15 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC, useLayoutEffect, useState } from 'react';
-import styled from 'styled-components/native';
 import { MediaItem } from '../components/media/media-item';
 import { Container } from '../components/shared/container';
 import { RefreshControl } from '../components/shared/refresh-control';
 import { useDefaultLocale } from '../hooks/locales';
-import { useAssets } from '../hooks/media';
+import { useMedia } from '../hooks/media';
 import { AssetStackParamList } from '../navigation/navigation';
+import { useUserRefresh } from '../hooks/refresh';
+import { FlatList, ListRenderItem, ScrollView } from 'react-native';
+import { z } from 'zod';
+import { MediaSchema } from '../schemas/media';
 
 export type AllMediaScreenProp = NativeStackScreenProps<
   AssetStackParamList,
@@ -15,8 +18,9 @@ export type AllMediaScreenProp = NativeStackScreenProps<
 
 export const Assets: FC<AllMediaScreenProp> = ({ navigation }) => {
   const [, setSearch] = useState<undefined | string>(undefined);
-  const { data, refetch, isRefetching } = useAssets();
-  const { data: locale } = useDefaultLocale();
+  const media = useMedia();
+  const locale = useDefaultLocale();
+  const { handleRefresh, refreshing } = useUserRefresh(media.refetch);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -27,23 +31,26 @@ export const Assets: FC<AllMediaScreenProp> = ({ navigation }) => {
     });
   }, [navigation]);
 
+  const renderItem: ListRenderItem<z.infer<typeof MediaSchema>> = ({
+    item,
+  }) => (
+    <MediaItem
+      navigation={navigation}
+      key={item.sys.id}
+      locale={locale.data?.code}
+      media={item}
+    />
+  );
+
   return (
-    <ScrollView
+    <FlatList
+      contentInset={{ top: 200 }}
+      className="pt-10"
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }>
-      <Container>
-        {data?.items?.map(item => (
-          <MediaItem
-            navigation={navigation}
-            key={item.sys.id}
-            locale={locale?.code}
-            media={item}
-          />
-        ))}
-      </Container>
-    </ScrollView>
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+      data={media.data?.items}
+      renderItem={renderItem}
+    />
   );
 };
-
-const ScrollView = styled.ScrollView``;

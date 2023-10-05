@@ -1,14 +1,35 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { NavigationContainer } from '@react-navigation/native';
-import React from 'react';
+import {
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { MMKV } from 'react-native-mmkv';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
 import { MainNavigation } from './src/navigation/navigation';
-import { persistor, store } from './src/storage/store';
+import { Contentful } from './src/services/contentful';
+import { clientPersister } from './src/storage/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+// import Burnt from 'burnt';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      // 🎉 only show error toasts if we already have data in the cache
+      // which indicates a failed background update
+      if (query.state.data !== undefined) {
+        console.log(error);
+        // Burnt.toast({
+        //   title: 'Error',
+        //   preset: 'error',
+        // });
+      }
+    },
+  }),
+});
+export const storage = new MMKV({ id: 'contentfully' });
 
 if (__DEV__) {
   import('react-query-native-devtools').then(({ addPlugin }) => {
@@ -17,19 +38,25 @@ if (__DEV__) {
 }
 
 const App = () => {
+  useEffect(() => {
+    const init = async () => {
+      Contentful.init();
+    };
+
+    init();
+  });
+
   return (
     <ActionSheetProvider>
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <NavigationContainer>
-            <QueryClientProvider client={queryClient}>
-              <SafeAreaProvider>
-                <MainNavigation />
-              </SafeAreaProvider>
-            </QueryClientProvider>
-          </NavigationContainer>
-        </PersistGate>
-      </Provider>
+      <NavigationContainer>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: clientPersister }}>
+          <SafeAreaProvider>
+            <MainNavigation />
+          </SafeAreaProvider>
+        </PersistQueryClientProvider>
+      </NavigationContainer>
     </ActionSheetProvider>
   );
 };

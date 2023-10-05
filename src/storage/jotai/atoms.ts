@@ -1,5 +1,5 @@
-import { atomWithMMKV } from './storage';
 import { useAtom } from 'jotai';
+import { atomWithMMKV } from './storage';
 
 type Token = {
   email: string;
@@ -12,12 +12,12 @@ export const useTokenAtom = () => useAtom(tokenAtom);
 
 type Space = string;
 
-export const spaceToken = atomWithMMKV<Space | null>('current-space', null);
+export const spaceAtom = atomWithMMKV<Space | null>('current-space', null);
 
-export const useSpaceAtom = () => useAtom(spaceToken);
+export const useSpaceAtom = () => useAtom(spaceAtom);
 
 type Environment = string;
 
-export const envToken = atomWithMMKV<Environment | null>('current-space', null);
+export const envAtom = atomWithMMKV<Environment | null>('current-env', null);
 
-export const useEnvAtom = () => useAtom(envToken);
+export const useEnvAtom = () => useAtom(envAtom);

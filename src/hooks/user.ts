@@ -1,15 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { Contentful } from '../services/contentful';
-import { useAppSelector } from '../storage/store';
+import { useAtomValue } from 'jotai';
+import { spaceAtom } from '../storage/jotai/atoms';
+import { useSpace } from '../storage/store';
 
 export const useUser = () => {
   return useQuery(['user'], async () => Contentful.Me.get());
 };
 
 export const useContentfulUser = (userId?: string) => {
-  const {
-    space: { space },
-  } = useAppSelector(state => state);
+  const [space] = useSpace();
 
   return useQuery(
     ['user', userId],
@@ -21,9 +21,7 @@ export const useContentfulUser = (userId?: string) => {
 };
 
 export const useUsers = () => {
-  const {
-    space: { space },
-  } = useAppSelector(state => state);
+  const [space] = useSpace();
 
   return useQuery(
     ['users', space],

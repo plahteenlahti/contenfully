@@ -1,8 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAppSelector } from '../storage/store';
-import { WebhooksResponse } from './webhooks';
-
-const BASE_URL = 'https://api.contentful.com';
 
 export type ContentfulNotificationPayload = {
   name: string;
@@ -16,10 +12,6 @@ export type ContentfulNotificationPayload = {
 };
 
 export const useCreateNotifications = () => {
-  const {
-    tokens: { selected },
-    space: { space },
-  } = useAppSelector(state => state);
   const queryClient = useQueryClient();
 
   return useMutation(

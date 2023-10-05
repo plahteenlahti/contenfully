@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAppSelector } from '../storage/store';
 import { Contentful } from '../services/contentful';
-import { useEnvAtom, useSpaceAtom } from '../storage/jotai/atoms';
+import { useEnv, useSpace } from '../storage/store';
 
 export const useModels = () => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [space] = useSpace();
+  const [environment] = useEnv();
 
   return useQuery(
     ['models', space, environment],
@@ -15,8 +14,8 @@ export const useModels = () => {
 };
 
 export const useModel = (modelID?: string) => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [space] = useSpace();
+  const [environment] = useEnv();
 
   return useQuery(
     ['models', space, environment, modelID],

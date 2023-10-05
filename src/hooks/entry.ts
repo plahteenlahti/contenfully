@@ -1,8 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
-import { BASE_URL } from '../constants/constants';
 import { Contentful } from '../services/contentful';
-import { useAppSelector } from '../storage/store';
-import { useEnvAtom, useSpaceAtom } from '../storage/jotai/atoms';
+import { useEnv, useSpace } from '../storage/store';
 
 type QueryParams = {
   type: 'limit' | 'skip' | 'order' | 'query';
@@ -12,8 +10,8 @@ type QueryParams = {
 type QueryOptions = QueryParams[];
 
 export const useEntries = (queryOptions?: QueryOptions) => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [space] = useSpace();
+  const [environment] = useEnv();
 
   // queryOptions?.forEach(({ type, parameter }) => {
   //   if (type && parameter) {
@@ -47,8 +45,8 @@ export const useEntries = (queryOptions?: QueryOptions) => {
 };
 
 export const useEntry = (entryID?: string) => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [space] = useSpace();
+  const [environment] = useEnv();
 
   return useQuery(
     ['entry', space, environment, entryID],
@@ -58,10 +56,8 @@ export const useEntry = (entryID?: string) => {
 };
 
 export const useUnpublishEntry = () => {
-  const {
-    tokens: { selected },
-    space: { space, environment },
-  } = useAppSelector(state => state);
+  const [space] = useSpace();
+  const [environment] = useEnv();
 
   return useMutation(
     async ({
@@ -72,23 +68,6 @@ export const useUnpublishEntry = () => {
       entryID: string;
       version: number;
       unpublish: boolean;
-    }) => {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/spaces/${space}/environments/${environment}/entries/${entryID}/published`,
-          {
-            method: unpublish ? 'DELETE' : 'PUT',
-            headers: {
-              'X-Contentful-Version': `${version}`,
-              Authorization: `Bearer ${selected?.content}`,
-            },
-          },
-        );
-
-        return response.json();
-      } catch (error) {
-        return error;
-      }
-    },
+    }) => undefined,
   );
 };

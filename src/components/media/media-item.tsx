@@ -1,14 +1,13 @@
 import React, { FC } from 'react';
 import styled from 'styled-components/native';
-import { Media } from '../../hooks/media';
 import { font } from '../../styles';
-import { LocaleCode } from '../../typings/locale';
 import { AllMediaScreenProp } from '../../views/assets';
 import { Chevron } from '../icons/chevron';
+import { z } from 'zod';
 
 type Props = {
   locale: LocaleCode | undefined;
-  media: Media;
+  media: z.infer<MediaSchema>;
   navigation: AllMediaScreenProp['navigation'];
 };
 

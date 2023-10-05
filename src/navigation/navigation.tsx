@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { StatusBar } from 'react-native';
 import { ThemeProvider, useTheme } from 'styled-components/native';
 import { DrawerButton } from '../components/buttons/drawer-button';
@@ -14,10 +14,11 @@ import {
 } from '../components/icons/icons';
 import { TabBar } from '../components/tab-bar/tab-bar';
 import { useThemeScheme } from '../hooks/useThemeScheme';
-import { useAppSelector } from '../storage/store';
+import { useToken } from '../storage/store';
 import { font } from '../styles';
 import { defaultTheme } from '../styles/theme';
 import { resolveColor } from '../utilities/color';
+import { LocaleView } from '../views/LocaleView';
 import { Asset } from '../views/asset';
 import { Assets } from '../views/assets';
 import { Content as ContentEntries } from '../views/entries';
@@ -29,10 +30,6 @@ import { Space } from '../views/space';
 import { User } from '../views/user';
 import { Webhook } from '../views/webhook';
 import { Welcome } from '../views/welcome';
-import { useAtomValue } from 'jotai';
-import { tokenAtom, useTokenAtom } from '../storage/jotai/atoms';
-import { Contentful } from '../services/contentful';
-import { LocaleView } from '../views/LocaleView';
 
 type SpaceTabParamList = {
   Home: undefined;
@@ -86,18 +83,8 @@ const Tab = createBottomTabNavigator<SpaceTabParamList>();
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 
 export const MainNavigation = () => {
-  const [token, setToken] = useTokenAtom();
-  const { theme, dark, light, barStyle } = useThemeScheme();
-
-  useEffect(() => {
-    const init = async () => {
-      if (token) {
-        Contentful.init(token.content);
-      }
-    };
-
-    init();
-  }, [token?.content]);
+  const [token] = useToken();
+  const { barStyle } = useThemeScheme();
 
   return (
     <ThemeProvider
@@ -107,16 +94,19 @@ export const MainNavigation = () => {
       <StatusBar barStyle={barStyle} />
       <MainStack.Navigator
         initialRouteName={token?.content ? 'Drawer' : 'Welcome'}>
-        <MainStack.Screen
-          name="Welcome"
-          component={Welcome}
-          options={{ headerShown: false }}
-        />
-        <MainStack.Screen
-          name="Drawer"
-          component={DrawerNavigation}
-          options={{ headerShown: false }}
-        />
+        {token?.content ? (
+          <MainStack.Screen
+            name="Drawer"
+            component={DrawerNavigation}
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <MainStack.Screen
+            name="Welcome"
+            component={Welcome}
+            options={{ headerShown: false }}
+          />
+        )}
       </MainStack.Navigator>
     </ThemeProvider>
   );

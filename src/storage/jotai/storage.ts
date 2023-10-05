@@ -1,10 +1,11 @@
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import { MMKV } from 'react-native-mmkv';
 
-const storage = new MMKV();
+export const storage = new MMKV();
 
 function getItem<T>(key: string): T | null {
   const value = storage.getString(key);
+  console.log('value', value);
   return value ? JSON.parse(value) : null;
 }
 

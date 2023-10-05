@@ -543,18 +543,18 @@ export const Locales = localeOptions.map(option => z.literal(option.code));
 export const Code = z.string();
 
 export const LocaleSchema = z.object({
-  name: z.string().or(z.null()).optional(),
+  name: z.string(),
   internal_code: z.string().or(z.null()).optional(),
   code: Code,
   fallbackCode: z.string().or(z.null()).optional(),
   default: z.boolean().or(z.null()).optional(),
-  contentManagementApi: z.boolean().or(z.null()).optional(),
-  contentDeliveryApi: z.boolean().or(z.null()).optional(),
-  optional: z.boolean().or(z.null()).optional(),
+  contentManagementApi: z.boolean(),
+  contentDeliveryApi: z.boolean(),
+  optional: z.boolean(),
   sys: z.object({
-    type: z.string().or(z.null()).optional(),
-    id: z.string().or(z.null()).optional(),
-    version: z.number().or(z.null()).optional(),
+    type: z.string(),
+    id: z.string(),
+    version: z.number(),
     space: z.object({
       sys: Link,
     }),

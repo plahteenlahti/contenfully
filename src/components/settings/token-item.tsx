@@ -11,9 +11,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components/native';
-import { setSelectedToken, Token } from '../../storage/reducers/token';
 import { Toggle } from '../toggle/toggle';
 
 const LIST_ITEM_HEIGHT = 70;
@@ -33,15 +31,11 @@ export const TokenItem: FC<Props> = ({
   selected,
   simultaneousHandlers,
 }) => {
-  const dispatch = useDispatch();
-
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(LIST_ITEM_HEIGHT);
   const marginVertical = useSharedValue(10);
 
-  const selectToken = () => {
-    dispatch(setSelectedToken(token));
-  };
+  const selectToken = () => {};
 
   const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
     onActive: event => {
@@ -53,11 +47,6 @@ export const TokenItem: FC<Props> = ({
         translateX.value = withTiming(-SCREEN_WIDTH);
         itemHeight.value = withTiming(0);
         marginVertical.value = withTiming(0);
-        // opacity.value = withTiming(0, undefined, isFinished => {
-        //   if (isFinished && onDismiss) {
-        //     runOnJS(onDismiss)(token);
-        //   }
-        // });
       } else {
         translateX.value = withTiming(0);
       }

@@ -8,12 +8,14 @@ export const defaultTheme: DefaultTheme = {
     textColorScale: 100,
     background: 'gray',
     backgroundColorScale: 900,
+    borderColorScale: 50,
   },
   light: {
     text: 'gray',
     textColorScale: 500,
     background: 'stone',
     backgroundColorScale: 50,
+    borderColorScale: 50,
   },
   colors: {
     indigo: {

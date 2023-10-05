@@ -1,13 +1,11 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC } from 'react';
-import { Text } from 'react-native';
-import styled from 'styled-components/native';
+import { ScrollView, Text, View } from 'react-native';
 import { Card } from '../components/card/Card';
 import { FieldIcon, FieldTypeText } from '../components/icons/field-icon';
-import { UnpaddedContainer } from '../components/shared/container';
 import { RefreshControl } from '../components/shared/refresh-control';
-import { ListButton, ListButtonText } from '../components/shared/text-button';
 import { useModel } from '../hooks/models';
+import { useUserRefresh } from '../hooks/refresh';
 import { useContentfulUser } from '../hooks/user';
 import { ModelStackParamList } from '../navigation/navigation';
 import { localizedFormatDate } from '../utilities/time';
@@ -21,16 +19,12 @@ export const Model: FC<Props> = ({
 }) => {
   const model = useModel(modelID);
   const updateBy = useContentfulUser(model.data?.sys.updatedBy.sys.id);
-
-  console.log(updateBy.data);
+  const { handleRefresh, refreshing } = useUserRefresh(model.refetch);
 
   return (
     <ScrollView
       refreshControl={
-        <RefreshControl
-          refreshing={model.isRefetching}
-          onRefresh={model.refetch}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       }>
       <Card.OuterContainer>
         <Card.Title>Activity</Card.Title>
@@ -56,9 +50,15 @@ export const Model: FC<Props> = ({
       </Card.OuterContainer>
 
       <Card.OuterContainer>
-        <Card.Title>{model.data?.name}</Card.Title>
+        <Card.Title>Info</Card.Title>
         <Card>
-          <Text>{model.data?.description}</Text>
+          <Card.DetailRow title="Name" subtitle={model.data?.name} />
+          <Card.Divider />
+          <Card.DetailRow
+            title="Description"
+            column
+            subtitle={model.data?.description}
+          />
         </Card>
       </Card.OuterContainer>
 
@@ -66,50 +66,29 @@ export const Model: FC<Props> = ({
         <Card.Title>Fields</Card.Title>
         <Card>
           {model.data?.fields?.map(field => (
-            <Field key={field.id}>
+            <View className="flex-row items-center px-2 pt-1" key={field.id}>
               <FieldIcon fieldType={field.type} />
-              <Column>
-                <FieldTitle>{field.name}</FieldTitle>
-                <FieldTypeText fieldType={field.type} />
-              </Column>
-            </Field>
+              <View className="ml-2 w-full flex-row items-start border-b border-b-gray-200 py-1">
+                <View>
+                  <Text className="text-sm font-medium text-gray-800">
+                    {field.name}
+                  </Text>
+                  <FieldTypeText fieldType={field.type} />
+                </View>
+                {model.data.displayField === field.id && (
+                  <View className="ml-2 w-auto rounded-sm bg-gray-200 px-2 py-0.5">
+                    {
+                      <Text className="text-center text-xs text-gray-600">
+                        Entry title
+                      </Text>
+                    }
+                  </View>
+                )}
+              </View>
+            </View>
           ))}
         </Card>
-      </Card.OuterContainer>
-
-      <Card.OuterContainer>
-        <Card.Title>Actions</Card.Title>
-        <UnpaddedContainer>
-          <ListButton>
-            <ListButtonText>Deactivate model</ListButtonText>
-          </ListButton>
-          <ListButton noBorder>
-            <ListButtonText>Delete model</ListButtonText>
-          </ListButton>
-        </UnpaddedContainer>
       </Card.OuterContainer>
     </ScrollView>
   );
 };
-
-const ScrollView = styled.ScrollView``;
-
-const Field = styled.View`
-  flex-direction: row;
-  align-items: center;
-  padding: 8px 0px 0px;
-`;
-
-const FieldTitle = styled.Text`
-  font-size: 13px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.gray[800]};
-`;
-
-const Column = styled.View`
-  margin-left: 8px;
-  border-bottom-width: 1px;
-  border-bottom-color: ${({ theme }) => theme.colors.gray[200]};
-  padding: 8px 0px;
-  width: 100%;
-`;

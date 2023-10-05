@@ -1,24 +1,18 @@
 import React, { FC, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import styled from 'styled-components/native';
-import { NotificationsSettings } from '../components/notifications/notifications-settings';
 import { TokenItem } from '../components/settings/token-item';
 import { PrimaryButton } from '../components/shared/button';
 import { Container } from '../components/shared/container';
 import { CardDescription, CardTitle } from '../components/shared/typography';
-import { ThemePicker } from '../components/theme-picker/theme-picker';
-import { addToken } from '../storage/reducers/token';
-import { useAppDispatch, useAppSelector } from '../storage/store';
 import { resolveColor } from '../utilities/color';
-import { ScrollView, Text } from 'react-native';
+import { Button, ScrollView, Text } from 'react-native';
 import { Card } from '../components/card/Card';
+import { useToken } from '../storage/store';
 
 export const Settings: FC = () => {
-  const { tokens, selected } = useAppSelector(state => state.tokens);
-  const { deviceToken } = useAppSelector(state => state.notifications);
-
-  const dispatch = useAppDispatch();
   const scrollRef = useRef(null);
+  const [token, setToken] = useToken();
 
   const {
     control,
@@ -35,12 +29,10 @@ export const Settings: FC = () => {
 
   const submit = ({ name, content }: { name: string; content: string }) => {
     reset();
-    dispatch(
-      addToken({
-        name: name,
-        content: content,
-      }),
-    );
+  };
+
+  const logout = () => {
+    setToken(undefined);
   };
 
   return (
@@ -52,15 +44,17 @@ export const Settings: FC = () => {
             To create a Contentful Management token in Contentful dashboard,
             follow these instructions.
           </Text>
-          {tokens?.map(token => (
+          {/* {tokens?.map(token => (
             <TokenItem
               simultaneousHandlers={scrollRef}
               key={token.name}
               selected={selected?.name === token.name}
               token={token}
             />
-          ))}
+          ))} */}
         </Card>
+
+        <Button onPress={logout} title="Logout" />
 
         <Card.Title>Add new Token</Card.Title>
         <InputLabel>Token name</InputLabel>
@@ -110,9 +104,7 @@ export const Settings: FC = () => {
 
       <Card.OuterContainer>
         <Card.Title>Theme</Card.Title>
-        <Card>
-          <ThemePicker />
-        </Card>
+        <Card></Card>
       </Card.OuterContainer>
     </ScrollView>
   );

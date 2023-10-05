@@ -45,19 +45,12 @@ const timingConfig = {
 
 type Props = {
   hook: z.infer<typeof WebhookSchema>;
-  removeHook: (id: string) => void;
 };
 
 export const WebhookItem: FC<Props> = ({ hook, removeHook }) => {
   const navigation = useNavigation<SpaceScreenProps['navigation']>();
   const isRemoving = useSharedValue(false);
   const translateX = useSharedValue(0);
-
-  const deleteHook = () => {
-    if (hook?.sys?.id) {
-      removeHook(hook?.sys?.id);
-    }
-  };
 
   type AnimatedGHContext = {
     startX: number;
@@ -91,7 +84,7 @@ export const WebhookItem: FC<Props> = ({ hook, removeHook }) => {
     if (isRemoving.value) {
       return {
         height: withTiming(0, timingConfig, () => {
-          runOnJS(deleteHook)();
+          // runOnJS(deleteHook)();
         }),
         transform: [
           {

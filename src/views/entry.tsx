@@ -129,7 +129,9 @@ export const EntryView: FC<Props> = ({
           {entry.data &&
             Object.keys(entry.data?.fields).map(fieldKey => (
               <View key={`${entry.data?.sys.id}_${fieldKey}`}>
-                <FieldTitle>{fieldKey}</FieldTitle>
+                <Text className="text-sm font-medium text-gray-700">
+                  {fieldKey}
+                </Text>
                 <FieldContent>
                   {locale.data?.code &&
                     fieldResolver(

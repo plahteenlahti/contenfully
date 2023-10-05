@@ -8,8 +8,9 @@ import { useContentfulUser } from '../hooks/user';
 import { SpaceStackParamList } from '../navigation/navigation';
 import { font } from '../styles';
 import { localizedFormatDate } from '../utilities/time';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Image } from 'react-native';
+import { useEmail } from '../hooks/email';
 
 export type SpaceScreenProps = NativeStackScreenProps<
   SpaceStackParamList,
@@ -27,13 +28,16 @@ export const User: FC<Props> = ({
   },
 }) => {
   const user = useContentfulUser(userID);
+  const sendEmail = useEmail(user.data?.email);
 
   return (
     <ScrollView>
-      <Image
-        className="rounded-full h-20 w-20"
-        source={{ uri: user.data?.avatarUrl }}
-      />
+      <View className="items-center justify-center py-4">
+        <Image
+          className="h-20 w-20 rounded-full"
+          source={{ uri: user.data?.avatarUrl }}
+        />
+      </View>
       <Card.OuterContainer>
         <Card.Title>Basic information</Card.Title>
         <Card>
@@ -53,7 +57,12 @@ export const User: FC<Props> = ({
             }
           />
           <Card.Divider />
-          <Card.DetailRow title="Email" subtitle={user.data?.email} />
+          <Card.DetailRow
+            title="Email"
+            subtitle={user.data?.email}
+            actionable
+            onPress={sendEmail}
+          />
           <Card.Divider />
           <Card.DetailRow
             title="Login count"

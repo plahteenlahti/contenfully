@@ -1,13 +1,13 @@
 import { DrawerNavigationHelpers } from '@react-navigation/drawer/lib/typescript/src/types';
+import { useSetAtom } from 'jotai';
 import React, { FC } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import styled from 'styled-components/native';
-import { useEnvironment } from '../../hooks/environment';
-import { setEnvironment, setSpace } from '../../storage/reducers/space';
-import { useAppDispatch } from '../../storage/store';
 import { z } from 'zod';
+import { useEnvironment } from '../../hooks/environment';
 import { SpaceSchema } from '../../schemas/space';
-import { useEnvAtom, useSpaceAtom } from '../../storage/jotai/atoms';
+import { envAtom, spaceAtom } from '../../storage/jotai/atoms';
+import { useEnv, useSpace } from '../../storage/store';
 
 type Props = {
   space: z.infer<typeof SpaceSchema>;
@@ -17,11 +17,11 @@ type Props = {
 
 export const SpaceCard: FC<Props> = ({ space, id, navigation }) => {
   const environment = useEnvironment(id);
-  const dispatch = useAppDispatch();
-  const [_space, setSpace] = useSpaceAtom();
-  const [_env, setEnv] = useEnvAtom();
+  const [_s, setSpace] = useSpace();
+  const [_e, setEnv] = useEnv();
 
   const navigateToSpace = (environmentID: string) => {
+    console.log(id, environmentID);
     setSpace(id);
     setEnv(environmentID);
     navigation.navigate('Space', { id });

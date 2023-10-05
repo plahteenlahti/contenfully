@@ -6,16 +6,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import styled from 'styled-components/native';
-import { Color, setAccentColor } from '../../storage/reducers/theme';
-import { useAppDispatch, useAppSelector } from '../../storage/store';
 import { ThemePreview } from './theme-preview';
 
 const colors: Color[] = ['stone', 'emerald', 'indigo', 'fuchsia', 'red'];
 
 export const ThemePicker = () => {
   const [width, setWidth] = useState(0);
-  const dispatch = useAppDispatch();
-  const { accentColor } = useAppSelector(({ theme }) => theme);
 
   const left = useSharedValue(
     colors.findIndex(color => color === accentColor) * (width / colors.length),
@@ -32,9 +28,7 @@ export const ThemePicker = () => {
     };
   });
 
-  const selectColor = (color: Color) => {
-    dispatch(setAccentColor(color));
-  };
+  const selectColor = (color: Color) => {};
 
   return (
     <View>

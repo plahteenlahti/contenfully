@@ -7,7 +7,6 @@ const cspell = {
   words: [
     'Unpadded',
     'Unpublish',
-    'reduxjs',
     'Contentfully',
     'MMKV',
     'gorhom',

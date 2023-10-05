@@ -1,41 +1,137 @@
-import { useQuery } from '@tanstack/react-query';
-import { BASE_URL } from '../constants/constants';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Contentful } from '../services/contentful';
-import { useAppSelector } from '../storage/store';
-import { useEnvAtom, useSpaceAtom } from '../storage/jotai/atoms';
+import { useEnv, useSpace } from '../storage/store';
+import { z } from 'zod';
+import { LocaleSchema } from '../schemas/locale';
 
 export const useLocales = () => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [spaceID] = useSpace();
+  const [envID] = useEnv();
 
   return useQuery(
-    ['locales', space, environment],
-    async () => Contentful.Locale.getAll(space, environment),
-    { enabled: !!space && !!environment },
+    ['locales', spaceID, envID],
+    async () => Contentful.Locales.getAll(spaceID, envID),
+    { enabled: !!spaceID && !!envID },
   );
 };
 
 export const useLocale = (localeID: string) => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [spaceID] = useSpace();
+  const [envID] = useEnv();
 
   return useQuery(
-    ['locale', space, environment],
-    async () => Contentful.Locale.getByID(space, environment, localeID),
-    { enabled: !!space && !!environment },
+    ['locale', spaceID, envID, localeID],
+    async () => Contentful.Locales.getByID(spaceID, envID, localeID),
+    { enabled: !!spaceID && !!envID },
   );
 };
 
 export const useDefaultLocale = () => {
-  const [space] = useSpaceAtom();
-  const [environment] = useEnvAtom();
+  const [spaceID] = useSpace();
+  const [envID] = useEnv();
 
   return useQuery(
-    ['locales', 'default', space, environment],
-    async () => await Contentful.Locale.getAll(space, environment),
+    ['locales', spaceID, envID, 'default'],
+    async () => await Contentful.Locales.getAll(spaceID, envID),
     {
-      enabled: !!space && !!environment,
+      enabled: !!spaceID && !!envID,
       select: data => data?.items?.find(item => item.default),
     },
   );
+};
+
+export const usePrefetchLocale = () => {
+  const queryClient = useQueryClient();
+  const [spaceID] = useSpace();
+  const [envID] = useEnv();
+
+  const prefetch = async (localeID: string) => {
+    queryClient.prefetchQuery<Locale>(
+      ['locale', spaceID, envID, localeID],
+      () => Contentful.Locales.getByID(spaceID, envID, localeID),
+    );
+  };
+  return prefetch;
+};
+
+type Locale = z.infer<typeof LocaleSchema>;
+type LocaleMutation = Partial<Omit<z.infer<typeof LocaleSchema>, 'sys'>>;
+type MutationData = {
+  fields: LocaleMutation;
+  version: number;
+  localeID: string;
+};
+
+export const useUpdateLocale = () => {
+  const [spaceID] = useSpace();
+  const [envID] = useEnv();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async (data: MutationData) => {
+      if (!spaceID || !envID || !data.localeID) {
+        return null;
+      }
+
+      return await Contentful.Locales.updateByID(
+        data.fields,
+        data.version,
+        spaceID,
+        envID,
+        data.localeID,
+      );
+    },
+    {
+      onMutate: async update => {
+        await queryClient.cancelQueries([
+          'locale',
+          spaceID,
+          envID,
+          update.localeID,
+        ]);
+        const previousValues = queryClient.getQueryData<Locale>([
+          'locale',
+          spaceID,
+          envID,
+          update.localeID,
+        ]);
+        queryClient.setQueryData<Locale>(
+          ['locale', spaceID, envID, update.localeID],
+          {
+            ...previousValues,
+            ...update.fields,
+          },
+        );
+
+        return { previousValues, update };
+      },
+      onError: (error, update, context) => {
+        if (context?.previousValues) {
+          queryClient.setQueryData<Locale>(
+            ['locale', spaceID, envID, context.update.localeID],
+            context.previousValues,
+          );
+        }
+      },
+      onSettled: update => {
+        queryClient.invalidateQueries<Locale>({
+          queryKey: ['locale', spaceID, envID, update?.sys.id],
+        });
+      },
+    },
+  );
+};
+
+export const useDeleteLocale = () => {
+  const [spaceID] = useSpace();
+  const [envID] = useEnv();
+  const queryClient = useQueryClient();
+
+  return useMutation(async (localeID: string) => {
+    if (!spaceID || !envID || !localeID) {
+      return null;
+    }
+
+    return await Contentful.Locales.deleteByID(spaceID, envID, localeID);
+  });
 };

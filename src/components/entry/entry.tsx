@@ -1,10 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { FC } from 'react';
 import styled from 'styled-components/native';
-import { Entry as EntryType } from '../../hooks/entry';
 import { useModel } from '../../hooks/models';
 import { font } from '../../styles';
-import { LocaleCode } from '../../typings/locale';
 import { formatTimestamp } from '../../utilities/time';
 import { ContentViewNavigationProp } from '../../views/entries';
 import { Chevron } from '../icons/chevron';
@@ -12,10 +10,11 @@ import { Draft, Published } from '../shared/published';
 import { TouchableOpacity } from 'react-native';
 import { z } from 'zod';
 import { Code } from '../../schemas/locale';
+import { EntrySchema } from '../../schemas/entry';
 
 type Props = {
   locale: z.infer<typeof Code> | undefined | null;
-  entry?: EntryType;
+  entry?: z.infer<typeof EntrySchema>;
 };
 
 export const Entry: FC<Props> = ({ entry, locale }) => {

@@ -1,16 +1,11 @@
-import React, { FC } from 'react';
-import { Button } from 'react-native';
+import React from 'react';
 import { useCreateNotifications } from '../../hooks/notification';
-import { useDeleteWebhook, useWebhooks } from '../../hooks/webhooks';
-import { useAppSelector } from '../../storage/store';
-import { Container, TitleContainer } from '../shared/container';
-import { CardTitle } from '../shared/typography';
-import { WebhookItem } from './webhook-item';
+import { useWebhooks } from '../../hooks/webhooks';
 import { Card } from '../card/Card';
+import { WebhookItem } from './webhook-item';
 
 export const WebhooksOverview = () => {
   const webhooks = useWebhooks();
-  const { mutate: removeHook } = useDeleteWebhook();
   const { mutate: createH } = useCreateNotifications();
 
   return (
@@ -19,11 +14,7 @@ export const WebhooksOverview = () => {
 
       <Card className="overflow-hidden">
         {webhooks.data?.items.map(hook => (
-          <WebhookItem
-            removeHook={removeHook}
-            key={hook?.sys?.id}
-            hook={hook}
-          />
+          <WebhookItem key={hook?.sys?.id} hook={hook} />
         ))}
       </Card>
     </Card.OuterContainer>

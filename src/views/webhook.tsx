@@ -2,17 +2,12 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC } from 'react';
 import styled from 'styled-components/native';
-import {
-  Container,
-  TitleContainer,
-  UnpaddedContainer,
-} from '../components/shared/container';
-import { ListButton, ListButtonText } from '../components/shared/text-button';
-import { CardTitle } from '../components/shared/typography';
+import { Card } from '../components/card/Card';
 import { useContentfulUser } from '../hooks/user';
-import { useDeleteWebhook, useWebhook } from '../hooks/webhooks';
+import { useUpdateWebhook, useWebhook } from '../hooks/webhooks';
 import { SpaceStackParamList } from '../navigation/navigation';
-import { font } from '../styles';
+import { useUserRefresh } from '../hooks/refresh';
+import { RefreshControl, Text, View } from 'react-native';
 
 export type WebhookScreenProps = NativeStackScreenProps<
   SpaceStackParamList,
@@ -30,10 +25,11 @@ export const Webhook: FC<Props> = ({
   },
   navigation,
 }) => {
-  const { data: webhook } = useWebhook(webhookID);
-  const { data: updatedBy } = useContentfulUser(webhook?.sys.updatedBy.sys.id);
-  const { data: createdBy } = useContentfulUser(webhook?.sys.createdBy.sys.id);
-  const { mutate: deleteHook } = useDeleteWebhook();
+  const webhook = useWebhook(webhookID);
+  const updatedBy = useContentfulUser(webhook.data?.sys.updatedBy.sys.id);
+  const createdBy = useContentfulUser(webhook.data?.sys.createdBy.sys.id);
+  const update = useUpdateWebhook();
+  const { handleRefresh, refreshing } = useUserRefresh(webhook.refetch);
   const { showActionSheetWithOptions } = useActionSheet();
 
   const handleDelete = () => {
@@ -45,78 +41,78 @@ export const Webhook: FC<Props> = ({
       },
       buttonIndex => {
         if (buttonIndex === 0) {
-          deleteHook(webhookID);
           navigation.navigate('Space');
         }
       },
     );
   };
 
+  const changeValue = (field: string, value: boolean) => {
+    if (webhook.data) {
+      update.mutate({
+        fields: {
+          [field]: value,
+        },
+        webhookID: webhook.data.sys.id,
+        version: webhook.data.sys.version,
+      });
+    }
+  };
+
   return (
-    <ScrollView>
-      <TitleContainer>
-        <CardTitle>Webhook</CardTitle>
-      </TitleContainer>
-      <Container>
-        <Field>
-          <Title>URL</Title>
-          <Value selectable>{webhook?.url}</Value>
-        </Field>
-        <Field>
-          <Title>Created</Title>
-          <Value>
-            {webhook?.sys.createdAt} by{' '}
-            {`${createdBy?.firstName} ${createdBy?.lastName}`}
-          </Value>
-        </Field>
-        <Field>
-          <Title>Updated</Title>
-          <Value>
-            {webhook?.sys.updatedAt} by{' '}
-            {`${updatedBy?.firstName} ${updatedBy?.lastName}`}
-          </Value>
-        </Field>
+    <ScrollView
+      refreshControl={
+        <RefreshControl onRefresh={handleRefresh} refreshing={refreshing} />
+      }>
+      <Card.OuterContainer>
+        <Card.Title>Webhook</Card.Title>
+        <Card>
+          <Card.DetailRow
+            title="URL"
+            column
+            valueProps={{
+              dataDetectorType: 'link',
+              ellipsizeMode: 'tail',
+              selectable: true,
+              numberOfLines: 1,
+            }}
+            subtitle={webhook.data?.url}
+          />
+          <Card.Divider />
+          <Card.DetailRow
+            title="Topics"
+            subtitle={webhook.data?.topics?.join(',')}
+          />
+          <View>
+            <Text>Headers</Text>
+            {webhook.data?.headers?.map(header => (
+              <View key={header.key}>
+                <Text>{header.key}</Text>
+                <Text>{header.value}</Text>
+              </View>
+            ))}
+          </View>
 
-        <Field>
-          <Title>Topics</Title>
-          <Value>{JSON.stringify(webhook?.topics)}</Value>
-        </Field>
-
-        <Field>
-          <Title>Topics</Title>
-          <Value>{JSON.stringify(webhook?.headers)}</Value>
-        </Field>
-
-        <Field>
-          <Title>Topics</Title>
-          <Value>{JSON.stringify(webhook?.headers)}</Value>
-        </Field>
-      </Container>
-
-      <UnpaddedContainer>
-        <ListButton onPress={handleDelete} noBorder>
-          <ListButtonText>Delete webhook</ListButtonText>
-        </ListButton>
-      </UnpaddedContainer>
+          <Card.Divider />
+          <Card.ToggleRow
+            title="Active"
+            value={webhook.data?.active}
+            onChange={() => changeValue('active', !webhook.data?.active)}
+          />
+        </Card>
+      </Card.OuterContainer>
+      <Card.OuterContainer>
+        <Card.Title>Actions</Card.Title>
+        <Card>
+          <Card.ButtonRow
+            text="Delete webhook"
+            destructive
+            onPress={handleDelete}
+          />
+        </Card>
+      </Card.OuterContainer>
     </ScrollView>
   );
 };
 
 const ScrollView = styled.ScrollView``;
-
-const Field = styled.View`
-  margin-bottom: 8px;
-`;
-
-const Value = styled.Text`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.gray[600]}
-  font-family: ${font.medium};
-  margin-bottom: 4px;
-`;
-
-const Title = styled.Text`
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.gray[500]}
-  font-family: ${font.regular};
-`;
