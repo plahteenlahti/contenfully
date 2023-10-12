@@ -20,6 +20,8 @@ export const useModel = (modelID?: string) => {
   return useQuery(
     ['models', space, environment, modelID],
     async () => await Contentful.Models.getById(space, environment, modelID),
-    { enabled: !!space && !!modelID && !!environment },
+    {
+      enabled: !!space && !!modelID && !!environment,
+    },
   );
 };

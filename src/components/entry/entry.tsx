@@ -1,16 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { FC } from 'react';
-import styled from 'styled-components/native';
+import React, { FC, useCallback } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { z } from 'zod';
 import { useModel } from '../../hooks/models';
-import { font } from '../../styles';
+import { EntrySchema } from '../../schemas/entry';
+import { Code } from '../../schemas/locale';
 import { formatTimestamp } from '../../utilities/time';
 import { ContentViewNavigationProp } from '../../views/entries';
 import { Chevron } from '../icons/chevron';
 import { Draft, Published } from '../shared/published';
-import { TouchableOpacity } from 'react-native';
-import { z } from 'zod';
-import { Code } from '../../schemas/locale';
-import { EntrySchema } from '../../schemas/entry';
 
 type Props = {
   locale: z.infer<typeof Code> | undefined | null;
@@ -21,52 +19,32 @@ export const Entry: FC<Props> = ({ entry, locale }) => {
   const model = useModel(entry?.sys?.contentType?.sys?.id);
   const navigation = useNavigation<ContentViewNavigationProp['navigation']>();
 
+  const navigate = useCallback(() => {
+    navigation.navigate('Entry', { entryID: `${entry?.sys.id}` });
+  }, []);
+
   return (
     <TouchableOpacity
       className="flex-row bg-white px-2 py-2"
-      onPress={() =>
-        navigation.navigate('Entry', { entryID: `${entry?.sys.id}` })
-      }>
-      <Column>
-        <TopRow>
+      onPress={navigate}>
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between">
           {model.data?.displayField && locale && (
-            <Title>{entry?.fields?.[model.data?.displayField]?.[locale]}</Title>
+            <Text className="text-sm font-medium text-gray-700">
+              {entry?.fields?.[model.data?.displayField]?.[locale]}
+            </Text>
           )}
           {entry?.sys?.updatedAt === entry?.sys.publishedAt ? (
             <Published />
           ) : (
             <Draft />
           )}
-        </TopRow>
-        <Updated>
+        </View>
+        <Text className="text-xs font-normal text-gray-500">
           {entry?.sys.updatedAt && formatTimestamp(entry?.sys.updatedAt)}
-        </Updated>
-      </Column>
+        </Text>
+      </View>
       <Chevron />
     </TouchableOpacity>
   );
 };
-
-const Title = styled.Text`
-  font-size: 13px;
-  font-family: ${font.medium};
-  color: ${({ theme }) => theme.colors.gray[600]};
-  flex: 1;
-`;
-
-const Updated = styled.Text`
-  font-size: 13px;
-  font-family: ${font.medium};
-  color: ${({ theme }) => theme.colors.gray[500]};
-`;
-
-const Column = styled.View`
-  flex: 1;
-  padding-right: 8px;
-`;
-
-const TopRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-`;

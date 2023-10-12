@@ -19,8 +19,6 @@ export const Asset: FC<Props> = ({
   const asset = useMedium(assetID);
   const locale = useDefaultLocale();
 
-  console.log(JSON.stringify(asset.data, undefined, 2));
-
   return (
     <ScrollView contentInset={{ top: 200 }}>
       <Card.OuterContainer>

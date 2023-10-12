@@ -4,6 +4,7 @@ import { font } from '../../styles';
 import { AllMediaScreenProp } from '../../views/assets';
 import { Chevron } from '../icons/chevron';
 import { z } from 'zod';
+import { TouchableOpacity } from 'react-native';
 
 type Props = {
   locale: LocaleCode | undefined;
@@ -20,7 +21,9 @@ export const MediaItem: FC<Props> = ({ locale, media, navigation }) => {
   };
 
   return (
-    <Container onPress={open}>
+    <TouchableOpacity
+      className="flex-row items-center bg-white px-1 py-2"
+      onPress={open}>
       {locale && (
         <Image
           source={{ uri: `https:${media?.fields?.file?.[locale]?.url}` }}
@@ -40,7 +43,7 @@ export const MediaItem: FC<Props> = ({ locale, media, navigation }) => {
         )}
       </Column>
       <Chevron />
-    </Container>
+    </TouchableOpacity>
   );
 };
 

@@ -15,6 +15,7 @@ import { ModelStackParamList } from '../navigation/navigation';
 import { ModelSchema } from '../schemas/contentful';
 import { localizedFormatDate } from '../utilities/time';
 import { styled } from 'nativewind';
+import { ModelListItem } from '../components/model/ModelListItem';
 
 type Model = z.infer<typeof ModelSchema>;
 
@@ -28,48 +29,10 @@ export const Models = ({
   navigation,
 }: NativeStackScreenProps<ModelStackParamList, 'Models'>) => {
   const models = useModels();
-  // const [, setSearch] = useState<undefined | string>(undefined);
 
-  // useLayoutEffect(() => {
-  //   navigation.setOptions({
-  //     headerSearchBarOptions: {
-  //       onSearchButtonPress: event => setSearch(event.nativeEvent.text),
-  //       onCancelButtonPress: () => setSearch(undefined),
-  //     },
-  //   });
-  // }, [navigation]);
-
-  const renderItem: ListRenderItem<Model> = useCallback(
-    ({ item }) => {
-      return (
-        <TouchableOpacity
-          className=" py-2"
-          key={item.sys.id}
-          onPress={() =>
-            navigation.navigate('Model', { modelID: item.sys.id })
-          }>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-medium text-gray-500">
-              {item.name}
-            </Text>
-            <Text className="text-xs font-medium text-gray-500">
-              {localizedFormatDate(new Date(item.sys.createdAt))}
-            </Text>
-          </View>
-
-          <View className="flex-row items-center justify-between">
-            <Text className="flex-1 pr-4 text-xs font-medium text-gray-500">
-              {item.description || '-'}
-            </Text>
-            <Text className="text-xs font-medium text-gray-500">
-              {localizedFormatDate(new Date(item.sys.updatedAt))}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
-    },
-    [navigation],
-  );
+  const renderItem: ListRenderItem<Model> = ({ item }) => {
+    return <ModelListItem item={item} navigation={navigation} />;
+  };
 
   const divider = useCallback(() => <Card.Divider />, []);
 
@@ -95,7 +58,8 @@ export const Models = ({
           <View className="gap-2" />
         </View>
       }
-      data={models.data?.items}
+      ListEmptyComponent={<View></View>}
+      data={models.data?.items ?? []}
       renderItem={renderItem}
       refreshControl={
         <RefreshControl

@@ -36,8 +36,6 @@ export const EntryView: FC<Props> = ({
   const updatedBy = useContentfulUser(entry.data?.sys.updatedBy.sys.id);
   const { mutate, error } = useUnpublishEntry();
 
-  console.log('SHOWN', JSON.stringify(entry.data?.fields, undefined, 2));
-
   const renderField = () => {
     switch (true) {
       case true:

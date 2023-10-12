@@ -5,7 +5,6 @@ export const storage = new MMKV();
 
 function getItem<T>(key: string): T | null {
   const value = storage.getString(key);
-  console.log('value', value);
   return value ? JSON.parse(value) : null;
 }
 

@@ -1,4 +1,8 @@
-import ky, { AfterResponseHook, BeforeRequestHook } from 'ky';
+import ky, {
+  AfterResponseHook,
+  BeforeRequestHook,
+  SearchParamsOption,
+} from 'ky';
 import { KyInstance } from 'ky/distribution/types/ky';
 import {
   ModelResponseSchema,
@@ -25,7 +29,6 @@ export namespace Hooks {
       if (unparsed) {
         const token = JSON.parse(unparsed);
 
-        console.log('before', token);
         return async (request: Request) => {
           request.headers.set('Authorization', `Bearer ${token.content}`);
         };
@@ -123,7 +126,6 @@ class ContentfulClient {
       data: Partial<Omit<z.infer<typeof WebhookSchema>, 'sys'>>,
       version: number,
     ) => {
-      console.log({ data });
       const response = await this.connection
         .put(`spaces/${spaceID}/webhook_definitions/${webhookID}`, {
           json: data,
@@ -189,10 +191,15 @@ class ContentfulClient {
   };
 
   Entries = {
-    getAll: async (space?: string, environment?: string) => {
+    getAll: async (
+      space?: string,
+      environment?: string,
+      searchParams?: SearchParamsOption,
+    ) => {
       const data = await this.connection
         .get(
           `spaces/${space}/environments/${environment}/entries?limit=25&skip=0`,
+          // { searchParams: searchParams },
         )
         .json();
 

@@ -1,6 +1,6 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC, useLayoutEffect, useState } from 'react';
-import { FlatList } from 'react-native';
+import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import styled from 'styled-components/native';
 import { Entry } from '../components/entry/entry';
 import { RefreshControl } from '../components/shared/refresh-control';
@@ -9,6 +9,9 @@ import { useDefaultLocale } from '../hooks/locales';
 import { useModels } from '../hooks/models';
 import { ContentStackParamList } from '../navigation/navigation';
 import { font } from '../styles';
+import { StyledFlatList } from '../components/shared/flatlist';
+import { Card } from '../components/card/Card';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 export type ContentViewNavigationProp = NativeStackScreenProps<
   ContentStackParamList,
@@ -34,10 +37,10 @@ export const Content: FC<Props> = ({ navigation }) => {
   //   });
   // }, [navigation]);
 
-  console.log(JSON.stringify(locale.error, undefined, 2));
-
   return (
-    <FlatList
+    <StyledFlatList
+      className="px-2 py-2"
+      contentContainerStyle="bg-white rounded-md px-2 py-2"
       contentInset={{ top: 200 }}
       refreshControl={
         <RefreshControl
@@ -54,10 +57,25 @@ export const Content: FC<Props> = ({ navigation }) => {
           ))}
         </HContainer>
       )}
+      ListEmptyComponent={
+        <Animated.View entering={FadeIn} className="bg-white p-4">
+          <Text className="mb-4 text-center text-lg text-gray-800">
+            No entries to show
+          </Text>
+          <Text className="text-center text-sm text-gray-500">
+            This Contentful space does not contain any entries. Try changing
+            space or environment.
+          </Text>
+        </Animated.View>
+      }
       data={entries.data?.entries}
+      ItemSeparatorComponent={Card.Divider}
       renderItem={({ item }) => (
         <Entry locale={locale.data?.code} entry={item} key={item?.sys?.id} />
       )}
+      ListFooterComponent={
+        entries.isFetchingNextPage ? <ActivityIndicator /> : null
+      }
       progressViewOffset={100}
       onEndReached={() => entries.fetchNextPage()}
     />

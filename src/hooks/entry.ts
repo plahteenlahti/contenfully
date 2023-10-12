@@ -1,45 +1,45 @@
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { Contentful } from '../services/contentful';
 import { useEnv, useSpace } from '../storage/store';
+import { SearchParamsOption } from 'ky';
+import { z } from 'zod';
+import { EntrySchema } from '../schemas/entry';
 
 type QueryParams = {
   type: 'limit' | 'skip' | 'order' | 'query';
   parameter?: string;
 };
 
-type QueryOptions = QueryParams[];
+const EntryArray = z.array(EntrySchema);
 
-export const useEntries = (queryOptions?: QueryOptions) => {
+const ITEMS_PER_PAGE = 25;
+
+export const useEntries = (searchParams?: SearchParamsOption) => {
   const [space] = useSpace();
   const [environment] = useEnv();
 
-  // queryOptions?.forEach(({ type, parameter }) => {
-  //   if (type && parameter) {
-  //     url.searchParams.append(type, parameter);
-  //   }
-  // });
-  // url.searchParams.set('skip', `${pageParam}`);
-
   return useInfiniteQuery(
-    ['entries', { space, environment, queryOptions }],
+    ['entries', { space, environment, searchParams }],
     async ({ pageParam = 0 }) =>
-      await Contentful.Entries.getAll(space, environment),
+      await Contentful.Entries.getAll(space, environment, searchParams),
     {
       enabled: !!space && !!environment,
       select: data => {
-        const allPagesArray = [];
-        data?.pages?.forEach(entryArray =>
-          allPagesArray.push(entryArray.items),
-        );
-        const flatEntries = allPagesArray.flat();
+        const allPagesArray: z.infer<typeof EntryArray> = [];
+        for (const entryArray of data.pages) {
+          allPagesArray.push(...entryArray.items);
+        }
+
         return {
           pages: data.pages,
           pageParams: data.pageParams,
-          entries: flatEntries,
+          entries: allPagesArray,
         };
       },
       getNextPageParam: lastPage =>
-        lastPage.skip + 25 < lastPage.total ? lastPage.skip + 25 : undefined,
+        lastPage.skip + ITEMS_PER_PAGE < lastPage.total
+          ? lastPage.skip + ITEMS_PER_PAGE
+          : undefined,
     },
   );
 };

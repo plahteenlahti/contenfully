@@ -21,7 +21,6 @@ export const SpaceCard: FC<Props> = ({ space, id, navigation }) => {
   const [_e, setEnv] = useEnv();
 
   const navigateToSpace = (environmentID: string) => {
-    console.log(id, environmentID);
     setSpace(id);
     setEnv(environmentID);
     navigation.navigate('Space', { id });
