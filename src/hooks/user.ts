@@ -5,29 +5,28 @@ import { spaceAtom } from '../storage/jotai/atoms';
 import { useSpace } from '../storage/store';
 
 export const useUser = () => {
-  return useQuery(['user'], async () => Contentful.Me.get());
+  return useQuery({
+    queryKey: ['user'],
+    queryFn: async () => Contentful.Me.get(),
+  });
 };
 
 export const useContentfulUser = (userId?: string) => {
   const [space] = useSpace();
 
-  return useQuery(
-    ['user', userId],
-    async () => await Contentful.Users.getById(space, userId),
-    {
-      enabled: !!space && !!userId,
-    },
-  );
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: async () => await Contentful.Users.getById(space, userId),
+    enabled: !!space && !!userId,
+  });
 };
 
-export const useUsers = () => {
+export const useUsers = (userId?: string) => {
   const [space] = useSpace();
 
-  return useQuery(
-    ['users', space],
-    async () => await Contentful.Users.getAll(space),
-    {
-      enabled: !!space,
-    },
-  );
+  return useQuery({
+    queryKey: ['users', userId],
+    queryFn: async () => await Contentful.Users.getAll(space),
+    enabled: !!space,
+  });
 };
