@@ -67,8 +67,8 @@ export const useUpdateLocale = () => {
   const [envID] = useEnv();
   const queryClient = useQueryClient();
 
-  return useMutation(
-    async (data: MutationData) => {
+  return useMutation({
+    mutationFn: async (data: MutationData) => {
       if (!spaceID || !envID || !data.localeID) {
         return null;
       }
@@ -81,45 +81,44 @@ export const useUpdateLocale = () => {
         data.localeID,
       );
     },
-    {
-      onMutate: async update => {
-        await queryClient.cancelQueries([
-          'locale',
-          spaceID,
-          envID,
-          update.localeID,
-        ]);
-        const previousValues = queryClient.getQueryData<Locale>([
-          'locale',
-          spaceID,
-          envID,
-          update.localeID,
-        ]);
-        queryClient.setQueryData<Locale>(
-          ['locale', spaceID, envID, update.localeID],
-          {
-            ...previousValues,
-            ...update.fields,
-          },
-        );
 
-        return { previousValues, update };
-      },
-      onError: (error, update, context) => {
-        if (context?.previousValues) {
-          queryClient.setQueryData<Locale>(
-            ['locale', spaceID, envID, context.update.localeID],
-            context.previousValues,
-          );
-        }
-      },
-      onSettled: update => {
-        queryClient.invalidateQueries<Locale>({
-          queryKey: ['locale', spaceID, envID, update?.sys.id],
-        });
-      },
+    onMutate: async update => {
+      await queryClient.cancelQueries([
+        'locale',
+        spaceID,
+        envID,
+        update.localeID,
+      ]);
+      const previousValues = queryClient.getQueryData<Locale>([
+        'locale',
+        spaceID,
+        envID,
+        update.localeID,
+      ]);
+      queryClient.setQueryData<Locale>(
+        ['locale', spaceID, envID, update.localeID],
+        {
+          ...previousValues,
+          ...update.fields,
+        },
+      );
+
+      return { previousValues, update };
     },
-  );
+    onError: (error, update, context) => {
+      if (context?.previousValues) {
+        queryClient.setQueryData<Locale>(
+          ['locale', spaceID, envID, context.update.localeID],
+          context.previousValues,
+        );
+      }
+    },
+    onSettled: update => {
+      queryClient.invalidateQueries<Locale>({
+        queryKey: ['locale', spaceID, envID, update?.sys.id],
+      });
+    },
+  });
 };
 
 export const useDeleteLocale = () => {
@@ -127,11 +126,13 @@ export const useDeleteLocale = () => {
   const [envID] = useEnv();
   const queryClient = useQueryClient();
 
-  return useMutation(async (localeID: string) => {
-    if (!spaceID || !envID || !localeID) {
-      return null;
-    }
+  return useMutation({
+    mutationFn: async (localeID: string) => {
+      if (!spaceID || !envID || !localeID) {
+        return null;
+      }
 
-    return await Contentful.Locales.deleteByID(spaceID, envID, localeID);
+      return await Contentful.Locales.deleteByID(spaceID, envID, localeID);
+    },
   });
 };

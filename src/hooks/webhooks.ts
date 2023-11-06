@@ -7,47 +7,45 @@ import { z } from 'zod';
 export const useWebhooks = () => {
   const [spaceID] = useSpace();
 
-  return useQuery(
-    ['webhooks', { spaceID }],
-    async () => {
+  return useQuery({
+    queryKey: ['webhooks', { spaceID }],
+    queryFn: async () => {
       if (!spaceID) {
         return null;
       }
       return await Contentful.Webhooks.getAll(spaceID);
     },
-    {
-      enabled: !!spaceID,
-    },
-  );
+
+    enabled: !!spaceID,
+  });
 };
 
 export const useWebhook = (webhookID: string) => {
   const [spaceID] = useSpace();
 
-  return useQuery(
-    ['webhooks', spaceID, webhookID],
-    async () => {
+  return useQuery({
+    queryKey: ['webhooks', spaceID, webhookID],
+    queryFn: async () => {
       if (!spaceID || !webhookID) {
         return null;
       }
 
       return Contentful.Webhooks.getByID(spaceID, webhookID);
     },
-    {
-      enabled: !!spaceID,
-    },
-  );
+    enabled: !!spaceID,
+  });
 };
 
 export const useDeleteWebhook = () => {
   const [spaceID] = useSpace();
 
-  return useMutation(async (webhookID: string) => {
-    if (!spaceID || !webhookID) {
-      return null;
-    }
-
-    return await Contentful.Webhooks.deleteByID(spaceID, webhookID);
+  return useMutation({
+    mutationFn: async (webhookID: string) => {
+      if (!spaceID || !webhookID) {
+        return null;
+      }
+      return await Contentful.Webhooks.deleteByID(spaceID, webhookID);
+    },
   });
 };
 
@@ -62,8 +60,8 @@ type MutationData = {
 export const useUpdateWebhook = () => {
   const [spaceID] = useSpace();
   const queryClient = useQueryClient();
-  return useMutation(
-    async (data: MutationData) => {
+  return useMutation({
+    mutationFn: async (data: MutationData) => {
       if (!spaceID || !data.webhookID) {
         return null;
       }
@@ -75,43 +73,39 @@ export const useUpdateWebhook = () => {
         data.version,
       );
     },
-    {
-      onMutate: async update => {
-        await queryClient.cancelQueries([
-          'webhooks',
-          spaceID,
-          update.webhookID,
-        ]);
-        const previousValues = queryClient.getQueryData<Webhook>([
-          'webhooks',
-          spaceID,
-          update.webhookID,
-        ]);
-        queryClient.setQueryData<Webhook>(
-          ['webhooks', spaceID, update.webhookID],
-          {
-            ...previousValues,
-            ...update.fields,
-          },
-        );
+    onMutate: async update => {
+      await queryClient.cancelQueries({
+        queryKey: ['webhooks', spaceID, update.webhookID],
+      });
+      const previousValues = queryClient.getQueryData<Webhook>([
+        'webhooks',
+        spaceID,
+        update.webhookID,
+      ]);
+      queryClient.setQueryData<Webhook>(
+        ['webhooks', spaceID, update.webhookID],
+        {
+          ...previousValues,
+          ...update.fields,
+        },
+      );
 
-        return { previousValues, update };
-      },
-      onError: (error, update, context) => {
-        if (context?.previousValues) {
-          queryClient.setQueryData<Webhook>(
-            ['locale', spaceID, context.update.webhookID],
-            context.previousValues,
-          );
-        }
-      },
-      onSettled: update => {
-        queryClient.invalidateQueries<Locale>({
-          queryKey: ['locale', spaceID, update?.sys.id],
-        });
-      },
+      return { previousValues, update };
     },
-  );
+    onError: (error, update, context) => {
+      if (context?.previousValues) {
+        queryClient.setQueryData<Webhook>(
+          ['locale', spaceID, context.update.webhookID],
+          context.previousValues,
+        );
+      }
+    },
+    onSettled: update => {
+      queryClient.invalidateQueries<Locale>({
+        queryKey: ['locale', spaceID, update?.sys.id],
+      });
+    },
+  });
 };
 
 export const createWebhook = () => {
