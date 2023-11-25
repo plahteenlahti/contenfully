@@ -18,56 +18,48 @@ export const useEntries = (searchParams?: SearchParamsOption) => {
   const [space] = useSpace();
   const [environment] = useEnv();
 
-  return useInfiniteQuery(
-    ['entries', { space, environment, searchParams }],
-    async ({ pageParam = 0 }) =>
+  return useInfiniteQuery({
+    queryKey: ['entries', space, environment, searchParams],
+    queryFn: async ({ pageParam = 0 }) =>
       await Contentful.Entries.getAll(space, environment, searchParams),
-    {
-      enabled: !!space && !!environment,
-      select: data => {
-        const allPagesArray: z.infer<typeof EntryArray> = [];
-        for (const entryArray of data.pages) {
-          allPagesArray.push(...entryArray.items);
-        }
+    enabled: !!space && !!environment,
+    initialPageParam: 0,
+    select: data => {
+      const allPagesArray: z.infer<typeof EntryArray> = [];
+      for (const entryArray of data.pages) {
+        allPagesArray.push(...entryArray.items);
+      }
 
-        return {
-          pages: data.pages,
-          pageParams: data.pageParams,
-          entries: allPagesArray,
-        };
-      },
-      getNextPageParam: lastPage =>
-        lastPage.skip + ITEMS_PER_PAGE < lastPage.total
-          ? lastPage.skip + ITEMS_PER_PAGE
-          : undefined,
+      return {
+        pages: data.pages,
+        pageParams: data.pageParams,
+        entries: allPagesArray,
+      };
     },
-  );
+    getNextPageParam: lastPage =>
+      lastPage.skip + ITEMS_PER_PAGE < lastPage.total
+        ? lastPage.skip + ITEMS_PER_PAGE
+        : undefined,
+  });
 };
 
 export const useEntry = (entryID?: string) => {
   const [space] = useSpace();
   const [environment] = useEnv();
 
-  return useQuery(
-    ['entry', space, environment, entryID],
-    async () => await Contentful.Entries.getById(space, environment, entryID),
-    { enabled: !!space && !!environment && !!entryID },
-  );
+  return useQuery({
+    queryKey: ['entry', space, environment, entryID],
+    queryFn: async () =>
+      await Contentful.Entries.getById(space, environment, entryID),
+    enabled: !!space && !!environment && !!entryID,
+  });
 };
 
 export const useUnpublishEntry = () => {
   const [space] = useSpace();
   const [environment] = useEnv();
 
-  return useMutation(
-    async ({
-      entryID,
-      unpublish,
-      version,
-    }: {
-      entryID: string;
-      version: number;
-      unpublish: boolean;
-    }) => undefined,
-  );
+  return useMutation({
+    mutationFn: async (entryID: string) => undefined,
+  });
 };
