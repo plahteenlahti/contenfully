@@ -8,36 +8,34 @@ export const useLocales = () => {
   const [spaceID] = useSpace();
   const [envID] = useEnv();
 
-  return useQuery(
-    ['locales', spaceID, envID],
-    async () => Contentful.Locales.getAll(spaceID, envID),
-    { enabled: !!spaceID && !!envID },
-  );
+  return useQuery({
+    queryKey: ['locales', spaceID, envID],
+    queryFn: async () => Contentful.Locales.getAll(spaceID, envID),
+    enabled: !!spaceID && !!envID,
+  });
 };
 
 export const useLocale = (localeID: string) => {
   const [spaceID] = useSpace();
   const [envID] = useEnv();
 
-  return useQuery(
-    ['locale', spaceID, envID, localeID],
-    async () => Contentful.Locales.getByID(spaceID, envID, localeID),
-    { enabled: !!spaceID && !!envID },
-  );
+  return useQuery({
+    queryKey: ['locale', spaceID, envID, localeID],
+    queryFn: async () => Contentful.Locales.getByID(spaceID, envID, localeID),
+    enabled: !!spaceID && !!envID,
+  });
 };
 
 export const useDefaultLocale = () => {
   const [spaceID] = useSpace();
   const [envID] = useEnv();
 
-  return useQuery(
-    ['locales', spaceID, envID, 'default'],
-    async () => await Contentful.Locales.getAll(spaceID, envID),
-    {
-      enabled: !!spaceID && !!envID,
-      select: data => data?.items?.find(item => item.default),
-    },
-  );
+  return useQuery({
+    queryKey: ['locales', spaceID, envID, 'default'],
+    queryFn: async () => await Contentful.Locales.getAll(spaceID, envID),
+    enabled: !!spaceID && !!envID,
+    select: data => data?.items?.find(item => item.default),
+  });
 };
 
 export const usePrefetchLocale = () => {
@@ -46,10 +44,10 @@ export const usePrefetchLocale = () => {
   const [envID] = useEnv();
 
   const prefetch = async (localeID: string) => {
-    queryClient.prefetchQuery<Locale>(
-      ['locale', spaceID, envID, localeID],
-      () => Contentful.Locales.getByID(spaceID, envID, localeID),
-    );
+    queryClient.prefetchQuery<Locale>({
+      queryKey: ['locale', spaceID, envID, localeID],
+      queryFn: async () => Contentful.Locales.getByID(spaceID, envID, localeID),
+    });
   };
   return prefetch;
 };
@@ -83,12 +81,9 @@ export const useUpdateLocale = () => {
     },
 
     onMutate: async update => {
-      await queryClient.cancelQueries([
-        'locale',
-        spaceID,
-        envID,
-        update.localeID,
-      ]);
+      await queryClient.cancelQueries({
+        queryKey: ['locale', spaceID, envID, update.localeID],
+      });
       const previousValues = queryClient.getQueryData<Locale>([
         'locale',
         spaceID,
@@ -114,7 +109,7 @@ export const useUpdateLocale = () => {
       }
     },
     onSettled: update => {
-      queryClient.invalidateQueries<Locale>({
+      queryClient.invalidateQueries({
         queryKey: ['locale', spaceID, envID, update?.sys.id],
       });
     },
